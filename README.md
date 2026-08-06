@@ -3,6 +3,12 @@
 Live-updating pixel-art GitHub profile cards you embed in your README. Backed by a
 serverless free-tier stack — no billing, nothing self-hosted for v1.
 
+<div align="center">
+  
+![Uknowme-h profile card](https://pixel-profile-zeta.vercel.app/api/render/Uknowme-h/pixel.svg?v=4e7b1b5d67fe)
+  
+</div>
+
 ## Stack
 
 - **Next.js (App Router) on Vercel** — builder UI + `/api/render` SVG endpoint.
