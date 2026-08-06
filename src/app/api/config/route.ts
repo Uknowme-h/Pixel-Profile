@@ -57,8 +57,11 @@ export async function POST(request: Request) {
       configHash,
     });
 
-    // URL for camo cache-busting.
-    const renderUrl = `${process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000"}/api/render/${body.username}/${body.templateId}.svg?v=${configHash}`;
+    // Derive origin from the request so the URL is always correct in every
+    // environment (local dev, Vercel preview, production) without needing an
+    // explicit env var. NEXT_PUBLIC_BASE_URL can still override if needed.
+    const origin = process.env.NEXT_PUBLIC_BASE_URL ?? new URL(request.url).origin;
+    const renderUrl = `${origin}/api/render/${body.username}/${body.templateId}.svg?v=${configHash}`;
     return json({ ok: true, config, renderUrl }, 200);
   } catch (err) {
     console.error("config save failed", err);
