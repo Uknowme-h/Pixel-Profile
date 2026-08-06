@@ -9,9 +9,8 @@ on:
 env:
   NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
   SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-  GITHUB_APP_ID: ${{ secrets.GITHUB_APP_ID }}
-  GITHUB_APP_PRIVATE_KEY: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
-  GITHUB_APP_WEBHOOK_SECRET: ${{ secrets.GITHUB_APP_WEBHOOK_SECRET }}
+  GITHUB_APP_ID: ${{ secrets.APP_ID }}
+  GITHUB_APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
   REFRESH_BATCH_SIZE: ${{ vars.REFRESH_BATCH_SIZE || '20' }}
 
 permissions:
@@ -37,4 +36,4 @@ jobs:
       - name: Refresh stale profiles
         run: npm run refresh
         env:
-          GITHUB_APP_PRIVATE_KEY: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
+          GITHUB_APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}

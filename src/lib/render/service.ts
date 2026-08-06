@@ -1,5 +1,6 @@
-import { getConfigByUsername, getCache } from "@/lib/data/store";
+import { getConfigByUsername, getCache, upsertCache } from "@/lib/data/store";
 import { renderTemplate } from "@/lib/svg/templates";
+import { fetchProfileWithStatus } from "@/lib/github/api";
 import type { RenderInput } from "@/types";
 
 /**
@@ -38,8 +39,34 @@ export async function renderProfile(username: string): Promise<ResolveResult> {
   const config = await getConfigByUsername(username);
   if (!config) return { error: "no_config" };
 
-  const data = await getCache(username);
-  if (!data) return { error: "no_data" };
+  let data = await getCache(username);
+
+  // First-time render: no cache row yet (user just saved their config and the
+  // background refresh hasn't run). Do a live fetch and warm the cache so the
+  // embed URL works immediately — the cron will keep it fresh from here on.
+  if (!data) {
+    const { result } = await fetchProfileWithStatus(username).catch(() => ({ result: null }));
+    if (!result) return { error: "no_data" };
+    await upsertCache(username, {
+      login: result.login,
+      name: result.name,
+      bio: result.bio,
+      avatarUrl: result.avatarUrl,
+      totalContributions: result.totalContributions,
+      commits: result.commits,
+      pullRequests: result.pullRequests,
+      issues: result.issues,
+      reposContributed: result.reposContributed,
+      languages: result.languages,
+      pinnedRepos: result.pinnedRepos,
+      starredRepos: result.starredRepos,
+      fetchedAt: new Date().toISOString(),
+      lastStatus: "ok",
+      failureCount: 0,
+    }).catch(() => null); // non-fatal — render can still succeed
+    data = await getCache(username);
+    if (!data) return { error: "no_data" };
+  }
 
   let mascotSvg: string | undefined;
   const mascotUrl = config.fields.mascotSvgUrl;
