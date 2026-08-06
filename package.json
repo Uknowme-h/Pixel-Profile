@@ -1,26 +1,38 @@
 {
-  "name": "github-readmes-scaffold",
+  "name": "github-readmes",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "refresh": "tsx --env-file=.env scripts/refresh.ts"
   },
   "dependencies": {
+    "@octokit/graphql": "^9.0.4",
+    "@supabase/supabase-js": "^2.112.1",
+    "dompurify": "^3.4.13",
+    "es-abstract": "^1.24.2",
+    "jsonwebtoken": "^9.0.3",
+    "linkedom": "^0.18.13",
     "next": "16.3.0",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "tsx": "^4.23.8",
+    "typescript": "^5",
+    "vitest": "^4.1.10"
   }
 }

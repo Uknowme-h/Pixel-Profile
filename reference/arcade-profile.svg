@@ -1,0 +1,115 @@
+<svg width="1000" height="640" viewBox="0 0 1000 640" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0f2545"/>
+      <stop offset="100%" stop-color="#0a1830"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#12345f"/>
+      <stop offset="100%" stop-color="#0d2749"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2.2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- outer frame -->
+  <rect x="0" y="0" width="1000" height="640" rx="4" fill="#020814"/>
+  <rect x="8" y="8" width="984" height="624" fill="url(#bg)" stroke="#3fd0ff" stroke-width="3"/>
+
+  <!-- scanline texture -->
+  <g opacity="0.05">
+    <rect x="8" y="8" width="984" height="624" fill="url(#panel)"/>
+  </g>
+
+  <!-- TITLE BAR -->
+  <rect x="8" y="8" width="984" height="56" fill="#0d2749" stroke="#3fd0ff" stroke-width="2"/>
+  <text x="500" y="45" text-anchor="middle" font-family="'Courier New', monospace" font-size="26" font-weight="bold" letter-spacing="4" fill="#3fd0ff" filter="url(#glow)">NISHANT.EXE — PLAYER PROFILE</text>
+
+  <!-- LEFT PANEL: sprite frame -->
+  <rect x="28" y="86" width="300" height="300" fill="url(#panel)" stroke="#3fd0ff" stroke-width="2"/>
+  <text x="178" y="110" text-anchor="middle" font-family="'Courier New', monospace" font-size="12" fill="#8fd8ff" letter-spacing="2">CHARACTER SELECT</text>
+
+  <!-- generic pixel sprite (not likeness-based, placeholder) -->
+  <g transform="translate(128,130)">
+    <rect x="40" y="0" width="40" height="10" fill="#ffcf8a"/>
+    <rect x="30" y="10" width="60" height="40" fill="#ffcf8a"/>
+    <rect x="30" y="10" width="60" height="14" fill="#3a2a1a"/>
+    <rect x="30" y="50" width="60" height="50" fill="#3fd0ff"/>
+    <rect x="20" y="55" width="10" height="35" fill="#3fd0ff"/>
+    <rect x="90" y="55" width="10" height="35" fill="#3fd0ff"/>
+    <rect x="35" y="100" width="20" height="35" fill="#0d2749"/>
+    <rect x="65" y="100" width="20" height="35" fill="#0d2749"/>
+    <rect x="30" y="130" width="25" height="10" fill="#222"/>
+    <rect x="65" y="130" width="25" height="10" fill="#222"/>
+  </g>
+
+  <text x="178" y="290" text-anchor="middle" font-family="'Courier New', monospace" font-size="20" font-weight="bold" fill="#3fd0ff">NISHANT JAISWAL</text>
+  <text x="178" y="312" text-anchor="middle" font-family="'Courier New', monospace" font-size="12" fill="#8fd8ff">CLASS: AGENTIC AI ENGINEER</text>
+  <text x="178" y="330" text-anchor="middle" font-family="'Courier New', monospace" font-size="12" fill="#8fd8ff">ORIGIN: KATHMANDU, NP</text>
+  <text x="178" y="348" text-anchor="middle" font-family="'Courier New', monospace" font-size="12" fill="#febc2e">LVL 99 — SOLO FOUNDER ARC</text>
+
+  <!-- XP bars -->
+  <g font-family="'Courier New', monospace" font-size="11" fill="#8fd8ff">
+    <text x="48" y="410">LANGGRAPH</text>
+    <rect x="140" y="399" width="160" height="12" fill="#0a1830" stroke="#3fd0ff"/>
+    <rect x="142" y="401" width="145" height="8" fill="#3fd0ff"/>
+
+    <text x="48" y="430">FASTAPI</text>
+    <rect x="140" y="419" width="160" height="12" fill="#0a1830" stroke="#3fd0ff"/>
+    <rect x="142" y="421" width="150" height="8" fill="#3fd0ff"/>
+
+    <text x="48" y="450">VOICE AI</text>
+    <rect x="140" y="439" width="160" height="12" fill="#0a1830" stroke="#3fd0ff"/>
+    <rect x="142" y="441" width="120" height="8" fill="#febc2e"/>
+
+    <text x="48" y="470">REACT/NEXT</text>
+    <rect x="140" y="459" width="160" height="12" fill="#0a1830" stroke="#3fd0ff"/>
+    <rect x="142" y="461" width="135" height="8" fill="#3fd0ff"/>
+  </g>
+
+  <!-- RIGHT PANEL: stat readout -->
+  <rect x="344" y="86" width="628" height="140" fill="url(#panel)" stroke="#3fd0ff" stroke-width="2"/>
+  <text x="364" y="110" font-family="'Courier New', monospace" font-size="12" fill="#8fd8ff" letter-spacing="2">STATUS</text>
+  <g font-family="'Courier New', monospace" font-size="13" fill="#d8f2ff">
+    <text x="364" y="136"><tspan fill="#febc2e">ROLE:</tspan> Jr. AI Agentic Engineer @ GoldenTechnosoft</text>
+    <text x="364" y="158"><tspan fill="#febc2e">HP:</tspan> ████████████████████ 100/100 (still shipping)</text>
+    <text x="364" y="180"><tspan fill="#febc2e">CURRENT QUEST:</tspan> HackerOne → Claude Code → Discord pipeline</text>
+    <text x="364" y="202"><tspan fill="#febc2e">SIDE QUEST:</tspan> Solo founder, chasing $10k MRR</text>
+  </g>
+
+  <!-- QUEST LOG / projects -->
+  <rect x="344" y="242" width="628" height="192" fill="url(#panel)" stroke="#3fd0ff" stroke-width="2"/>
+  <text x="364" y="266" font-family="'Courier New', monospace" font-size="12" fill="#8fd8ff" letter-spacing="2">QUEST LOG — COMPLETED</text>
+
+  <g font-family="'Courier New', monospace" font-size="13" fill="#d8f2ff">
+    <text x="364" y="294"><tspan fill="#3fd0ff">✓</tspan> VoiceGent <tspan fill="#8fd8ff">— real-time voice AI agent (Twilio, LiveKit)</tspan></text>
+    <text x="364" y="318"><tspan fill="#3fd0ff">✓</tspan> StaffPilot <tspan fill="#8fd8ff">— agentic hiring assistant (LangGraph)</tspan></text>
+    <text x="382" y="340" fill="#febc2e">★ BOSS DEFEATED: 1st Runner-Up, Aqore AI Hackathon</text>
+    <text x="364" y="364"><tspan fill="#3fd0ff">✓</tspan> LeadFlow Pro <tspan fill="#8fd8ff">— multi-source lead gen (BullMQ, Next.js)</tspan></text>
+    <text x="364" y="388"><tspan fill="#3fd0ff">✓</tspan> TradeSight <tspan fill="#8fd8ff">— NEPSE backtesting engine (sandboxed Docker)</tspan></text>
+    <text x="364" y="412"><tspan fill="#3fd0ff">✓</tspan> Audiollect <tspan fill="#8fd8ff">— OCR-to-audio agentic pipeline</tspan></text>
+  </g>
+
+  <!-- INVENTORY strip -->
+  <rect x="28" y="410" width="300" height="76" fill="url(#panel)" stroke="#3fd0ff" stroke-width="2"/>
+  <text x="48" y="430" font-family="'Courier New', monospace" font-size="12" fill="#8fd8ff" letter-spacing="2">INVENTORY</text>
+  <g font-family="'Courier New', monospace" font-size="11" fill="#d8f2ff">
+    <text x="48" y="452">[PY] [JS] [TS] [SQL] [DOCKER]</text>
+    <text x="48" y="470">[AWS] [REDIS] [MONGO] [PGSQL]</text>
+  </g>
+
+  <!-- BOTTOM: contact bar -->
+  <rect x="28" y="500" width="944" height="60" fill="#0d2749" stroke="#3fd0ff" stroke-width="2"/>
+  <text x="500" y="536" text-anchor="middle" font-family="'Courier New', monospace" font-size="14" fill="#3fd0ff" letter-spacing="2">PRESS [LINKEDIN] · [EMAIL] · [GITHUB] TO CONTINUE</text>
+
+  <!-- bottom footer strip -->
+  <rect x="28" y="576" width="944" height="40" fill="#0a1830" stroke="#3fd0ff" stroke-width="1"/>
+  <text x="48" y="600" font-family="'Courier New', monospace" font-size="11" fill="#5a7fa0">INSERT COIN TO VIEW REPOSITORIES</text>
+  <text x="952" y="600" text-anchor="end" font-family="'Courier New', monospace" font-size="11" fill="#5a7fa0">© 2026 NISHANT JAISWAL</text>
+
+</svg>

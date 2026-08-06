@@ -1,0 +1,40 @@
+name: refresh-github-data
+
+on:
+  schedule:
+    # Free-tier, high-frequency sweep: every 30 min (edit as needed).
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {}
+
+env:
+  NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+  GITHUB_APP_ID: ${{ secrets.GITHUB_APP_ID }}
+  GITHUB_APP_PRIVATE_KEY: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
+  GITHUB_APP_WEBHOOK_SECRET: ${{ secrets.GITHUB_APP_WEBHOOK_SECRET }}
+  REFRESH_BATCH_SIZE: ${{ vars.REFRESH_BATCH_SIZE || '20' }}
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Runs directly against Supabase + GitHub API — no Vercel function
+      # invocations, no 10s function timeout, and the DB writes keep the
+      # Supabase free project awake (see Phase 5 in Project_Plan.md).
+      - name: Refresh stale profiles
+        run: npm run refresh
+        env:
+          GITHUB_APP_PRIVATE_KEY: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
