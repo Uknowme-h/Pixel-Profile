@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getBrowserClient } from "@/lib/supabase/browser";
 import { TEMPLATES } from "@/lib/svg/templates";
 import type { Session } from "@supabase/supabase-js";
@@ -15,6 +15,7 @@ import type { ThemeColors, TemplateId, DefaultMascotId, BarStyle } from "@/types
  */
 
 const DEFAULT_THEME: ThemeColors = { bg: "#1a1b26", fg: "#c0caf5", accent: "#7aa2f7", muted: "#565f89" };
+const DEFAULT_BAR_COLORS = [DEFAULT_THEME.accent, DEFAULT_THEME.fg, DEFAULT_THEME.accent, DEFAULT_THEME.fg];
 
 const GITHUB_MARK_PATH =
   "M56.7937 84.9688C44.4187 83.4688 35.7 74.5625 35.7 63.0313C35.7 58.3438 37.3875 53.2813 40.2 49.9063C38.9812 46.8125 39.1687 40.25 40.575 37.5313C44.325 37.0625 49.3875 39.0313 52.3875 41.75C55.95 40.625 59.7 40.0625 64.2937 40.0625C68.8875 40.0625 72.6375 40.625 76.0125 41.6563C78.9187 39.0313 84.075 37.0625 87.825 37.5313C89.1375 40.0625 89.325 46.625 88.1062 49.8125C91.1062 53.375 92.7 58.1563 92.7 63.0313C92.7 74.5625 83.9812 83.2813 71.4187 84.875C74.6062 86.9375 76.7625 91.4375 76.7625 96.5938L76.7625 106.344C76.7625 109.156 79.1062 110.75 81.9187 109.625C98.8875 103.156 112.2 86.1875 112.2 65.1875C112.2 38.6563 90.6375 17 64.1062 17C37.575 17 16.2 38.6562 16.2 65.1875C16.2 86 29.4187 103.25 47.2312 109.719C49.7625 110.656 52.2 108.969 52.2 106.438L52.2 98.9375C50.8875 99.5 49.2 99.875 47.7 99.875C41.5125 99.875 37.8562 96.5 35.2312 90.2188C34.2 87.6875 33.075 86.1875 30.9187 85.9063C29.7937 85.8125 29.4187 85.3438 29.4187 84.7813C29.4187 83.6563 31.2937 82.8125 33.1687 82.8125C35.8875 82.8125 38.2312 84.5 40.6687 87.9688C42.5437 90.6875 44.5125 91.9063 46.8562 91.9063C49.2 91.9063 50.7 91.0625 52.8562 88.9063C54.45 87.3125 55.6687 85.9063 56.7937 84.9688Z";
@@ -46,12 +47,14 @@ export default function Builder() {
   const [mascotFileName, setMascotFileName] = useState<string | null>(null);
   const [uploadingMascot, setUploadingMascot] = useState(false);
   const [stars, setStars] = useState<number | null>(null);
-  const [barColors, setBarColors] = useState<string[]>([DEFAULT_THEME.accent, DEFAULT_THEME.fg, DEFAULT_THEME.accent, DEFAULT_THEME.fg]);
+  const [barColors, setBarColors] = useState<string[]>(DEFAULT_BAR_COLORS);
   const [barAnimation, setBarAnimation] = useState<BarStyle>("ease-out");
   // displayUrl is the debounced preview URL actually shown in the <img>.
   // previewUrl changes immediately on every input; displayUrl trails by 300ms,
   // eliminating in-flight request spam while the user is still typing.
   const [displayUrl, setDisplayUrl] = useState<string | null>(null);
+  // "load saved card" flow state.
+  const [loadState, setLoadState] = useState<"idle" | "loading" | "loaded" | "none" | "error">("idle");
 
   useEffect(() => {
     if (!supabase) return;
@@ -87,6 +90,64 @@ export default function Builder() {
   const signOut = useCallback(() => {
     supabase?.auth.signOut();
   }, [supabase]);
+
+  // Picking a built-in mascot also clears any uploaded custom one, otherwise
+  // the custom mascot would keep overriding the selection in the preview.
+  const chooseMascot = useCallback((id: DefaultMascotId) => {
+    setDefaultMascot(id);
+    if (mascotUrl) {
+      setMascotUrl(null);
+      setMascotFileName(null);
+    }
+  }, [mascotUrl]);
+
+  // Drop the uploaded mascot and let the current default mascot show again.
+  const clearMascot = useCallback(() => {
+    setMascotUrl(null);
+    setMascotFileName(null);
+  }, []);
+
+  // Restore a previously saved card config into the form so the user can keep
+  // working on it. The persisted card lives in the top-level `mascot_svg_url`
+  // column (that's what save writes), while `fields.mascotSvgUrl` is unused —
+  // so we read from the column first, falling back to the field for safety.
+  const loadSaved = useCallback(async () => {
+    if (!session) return;
+    setLoadState("loading");
+    try {
+      const res = await fetch("/api/config", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "load failed");
+      if (!data.config) { setLoadState("none"); return; }
+      const c = data.config;
+      setUsername(c.username || "");
+      setTemplateId(c.templateId);
+      setTheme(c.theme);
+      setName(c.fields?.name ?? "");
+      setRole(c.fields?.role ?? "");
+      setTagline(c.fields?.tagline ?? "");
+      setDefaultMascot(c.fields?.defaultMascot ?? "webswing");
+      setBarColors(c.fields?.barColors ?? DEFAULT_BAR_COLORS);
+      setBarAnimation(c.fields?.barAnimation ?? "ease-out");
+      setMascotUrl(c.fields?.mascotSvgUrl ?? c.mascotSvgUrl ?? null);
+      setMascotFileName(null);
+      setSaveResult(null);
+      setLoadState("loaded");
+    } catch {
+      setLoadState("error");
+    }
+  }, [session]);
+
+  // Auto-restore the user's last saved card once when they land after signing
+  // in, so the preview is already populated and ready to keep editing.
+  const autoLoadedRef = useRef(false);
+  useEffect(() => {
+    if (!session || autoLoadedRef.current || loadState !== "idle") return;
+    autoLoadedRef.current = true;
+    loadSaved();
+  }, [session, loadState, loadSaved]);
 
   // Stable URL derived directly from inputs — no random counter so the browser
   // can cache identical URLs between renders.
@@ -440,13 +501,14 @@ export default function Builder() {
                   { id: "headturn", emoji: "🕸", label: "Look" },
                   { id: "github",   icon: "github" as const, label: "Mark" },
                   { id: "copilot",  emoji: "🤖",  label: "Copilot" },
+                  { id: "octopuss", emoji: "🐙",  label: "Octo" },
                   { id: "none",     emoji: "—",  label: "None" },
                 ] as ({ id: DefaultMascotId; label: string } & ({ emoji: string; icon?: never } | { icon: "github"; emoji?: never }))[]
               ).map((opt) => (
                 <button
                   key={opt.id}
                   type="button"
-                  onClick={() => setDefaultMascot(opt.id)}
+                  onClick={() => chooseMascot(opt.id)}
                   className={`border py-2.5 text-center transition-colors ${
                     defaultMascot === opt.id
                       ? "border-[#111] bg-[#111] text-white"
@@ -470,7 +532,7 @@ export default function Builder() {
             <label className="group block cursor-pointer">
               <input
                 type="file"
-                accept="image/svg+xml,.svg"
+                accept="image/svg+xml,.svg,.piskel,.json"
                 className="sr-only"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
@@ -500,15 +562,41 @@ export default function Builder() {
                       <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
                     </svg>
                     <span className="text-xs text-[#666]">click to upload</span>
-                    <span className="text-[10px] text-[#888]">image/svg+xml</span>
+<span className="text-[10px] text-[#888]">.svg or .piskel (animated)</span>
                   </>
                 )}
               </div>
             </label>
+            {mascotUrl && (
+              <button
+                type="button"
+                onClick={clearMascot}
+                className="mt-2 text-[10px] uppercase tracking-[0.15em] text-[#888] transition-colors hover:text-red-600"
+              >
+                remove custom mascot
+              </button>
+            )}
           </div>
 
           {/* Save */}
           <div className="pb-2">
+            <button
+              type="button"
+              onClick={loadSaved}
+              disabled={loadState === "loading"}
+              className="mb-3 w-full border border-[#E0E0E0] py-2.5 text-[11px] uppercase tracking-[0.2em] text-[#444] transition-colors hover:border-[#999] hover:text-[#111] disabled:opacity-25"
+            >
+              {loadState === "loading" ? "loading…" : "load saved card"}
+            </button>
+            {loadState === "none" && (
+              <p className="mb-3 text-right text-[10px] text-[#888]">no saved card yet</p>
+            )}
+            {loadState === "loaded" && (
+              <p className="mb-3 text-right text-[10px] text-emerald-600">saved card restored</p>
+            )}
+            {loadState === "error" && (
+              <p className="mb-3 text-right text-[10px] text-red-600">couldn&apos;t load saved card</p>
+            )}
             <button
               onClick={save}
               disabled={!canSave || saving}

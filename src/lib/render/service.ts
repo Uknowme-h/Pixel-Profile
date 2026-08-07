@@ -69,7 +69,7 @@ export async function renderProfile(username: string): Promise<ResolveResult> {
   }
 
   let mascotSvg: string | undefined;
-  const mascotUrl = config.fields.mascotSvgUrl;
+  const mascotUrl = config.fields.mascotSvgUrl ?? config.mascotSvgUrl;
   if (mascotUrl) {
     const fetched = await getMascotSvgByUrl(mascotUrl);
     if (fetched) mascotSvg = fetched;

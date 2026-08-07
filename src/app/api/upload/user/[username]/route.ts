@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { getServiceClient } from "@/lib/supabase/server";
 import { sanitizeSvg, namespaceDefs, SanitizeError, MAX_UPLOAD_BYTES } from "@/lib/svg/sanitize";
+import { piskelToAnimatedSvg, PiskelError } from "@/lib/svg/piskel";
 import { createHash } from "node:crypto";
 
 /**
@@ -64,12 +65,20 @@ export async function POST(
   }
 
   try {
-    const sanitized = sanitizeSvg(raw);
-
-    // Namespace user defs/ids so they can't collide with template ids when
-    // composed into the card.
-    const scopeId = createHash("sha1").update(username).digest("hex").slice(0, 8);
-    const namespaced = namespaceDefs(sanitized, `${userId.slice(0, 8)}-${scopeId}`);
+    // Detect a Piskel (JSON) upload by its leading character and convert it to
+    // an animated SVG sprite; plain SVG goes through the usual pipeline.
+    const first = raw.trimStart()[0];
+    let namespaced: string;
+    if (first === "{") {
+      const { svg } = piskelToAnimatedSvg(raw);
+      namespaced = namespaceDefs(sanitizeSvg(svg), `${userId.slice(0, 8)}-${createHash("sha1").update(username).digest("hex").slice(0, 8)}`);
+    } else {
+      const sanitized = sanitizeSvg(raw);
+      // Namespace user defs/ids so they can't collide with template ids when
+      // composed into the card.
+      const scopeId = createHash("sha1").update(username).digest("hex").slice(0, 8);
+      namespaced = namespaceDefs(sanitized, `${userId.slice(0, 8)}-${scopeId}`);
+    }
 
     await ensureBucket();
     const objectPath = `user/${userId}/${username}.svg`;
@@ -98,6 +107,9 @@ export async function POST(
     return json({ ok: true, path: objectPath, url: publicUrl }, 200);
   } catch (err) {
     if (err instanceof SanitizeError) {
+      return json({ error: err.message }, 422);
+    }
+    if (err instanceof PiskelError) {
       return json({ error: err.message }, 422);
     }
     console.error("upload failed", err);

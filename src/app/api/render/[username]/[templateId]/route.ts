@@ -1,14 +1,17 @@
 import { renderProfile } from "@/lib/render/service";
 import { renderPreview } from "@/lib/render/preview";
+import { createHash } from "node:crypto";
 
 /**
  * Phase 5 — on-demand render endpoint.
  *
- * GET /api/render/{username}/{templateId}.svg?v={config_hash}
+ * GET /api/render/{username}/{templateId}.svg
  *
- * Cache-bust by versioning the URL, not the header: camo caches by URL and the
- * README HTML is cached too, so the explicit ?v= is the only reliable way to
- * defeat stale badges. Keep this route dependency-light for cold-start health.
+ * The URL is STABLE (no version segment). Every hit re-renders from the latest
+ * config, and the response carries a content-based ETag with `no-cache`, so
+ * browsers/camo revalidate and get a 304 when nothing changed — the same URL
+ * always reflects the newest card without the user re-copying an embed link.
+ * A legacy ?v={hash} param is tolerated (it was the old cache-buster).
  */
 
 export const dynamic = "force-dynamic";
@@ -47,16 +50,31 @@ export async function GET(
     });
   }
 
-  const ttl = isPreview ? 0 : Number(process.env.RENDER_TTL_SECONDS ?? 3600);
+  const ttl = isPreview ? 0 : Number(process.env.RENDER_TTL_SECONDS ?? 0);
   // Preview: allow browser to cache for 30 s so re-typing the same value hits
   // the browser cache instead of the server. The URL is stable (no random _=N
   // counter), so identical inputs naturally reuse cached responses.
   const previewCacheControl = "public, max-age=30, stale-while-revalidate=60";
+  const publishedCacheControl = `public, max-age=${ttl}, s-maxage=${ttl}, must-revalidate`;
+
+  // Content fingerprint lets a STABLE URL revalidate: when the same SVG is
+  // requested again, the client's If-None-Match matches and we return a cheap
+  // 304, yet any config/mascot change produces a new ETag and a fresh body.
+  const etag = `"${createHash("sha1").update(svg).digest("hex").slice(0, 16)}"`;
+  const ifNoneMatch = req.headers.get("if-none-match");
+  if (!isPreview && ifNoneMatch?.split(/\s*,\s*/).includes(etag)) {
+    return new Response(null, {
+      status: 304,
+      headers: { ETag: etag, "Cache-Control": publishedCacheControl },
+    });
+  }
+
   return new Response(svg, {
     status: 200,
     headers: {
       "Content-Type": "image/svg+xml; charset=utf-8",
-      "Cache-Control": isPreview ? previewCacheControl : `public, s-maxage=${ttl}, max-age=${ttl}, stale-while-revalidate=86400`,
+      "Cache-Control": isPreview ? previewCacheControl : publishedCacheControl,
+      ETag: etag,
       "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; img-src data:",
       "X-Content-Type-Options": "nosniff",
     },

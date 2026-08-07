@@ -27,9 +27,21 @@ function mapConfig(row: ProfileConfigRow): ProfileConfig {
     templateId: row.template_id,
     theme: row.theme as unknown as ProfileConfig["theme"],
     fields: row.fields as ProfileConfig["fields"],
+    mascotSvgUrl: row.mascot_svg_url,
     configHash: row.config_hash,
     updatedAt: row.updated_at,
   };
+}
+
+/** Fetch the current user's saved card config (one per user). */
+export async function getConfigByUser(userId: string): Promise<ProfileConfig | null> {
+  const { data, error } = await getServiceClient()
+    .from("profile_configs")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? mapConfig(data as ProfileConfigRow) : null;
 }
 
 /** Fetch a user's config by GitHub username (the thing camo asks for). */

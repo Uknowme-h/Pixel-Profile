@@ -3,6 +3,7 @@ import { renderPixelText } from "@/lib/svg/pixel-font";
 import { normalizeMascot, type MascotSlot } from "@/lib/svg/normalize";
 import { SPIDEY_HREF } from "@/lib/svg/spiderman-sprite-b64";
 import { HEADTURN_HREF } from "@/lib/svg/spiderman-headturn-b64";
+import { OCTOPUSS_SPRITE } from "@/lib/svg/octopuss-sprite";
 
 // Web-swing sprite (pixel + arcade default): 77 frames × 82×124 px
 const SPIDEY_FRAMES = 77;
@@ -104,6 +105,11 @@ function renderMascot(
 ): string[] {
   if (choice === "github" || choice === "copilot") {
     return [staticMascot(choice, slot, fill)];
+  }
+  // The Octopuss is a self-animated inline SVG sprite — normalize it as a
+  // regular mascot (crispEdges, fitted) and let its own SMIL run in place.
+  if (choice === "octopuss") {
+    return [normalizeMascot(OCTOPUSS_SPRITE, { x: slot.x, y: slot.y, width: slot.w, height: slot.h }).svg];
   }
   return spideySprite(choice, prefix, slot);
 }

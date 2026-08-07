@@ -108,6 +108,12 @@ describe("template engine", () => {
     expect(svg).toContain("crispEdges");
   });
 
+  it("renders the octopuss default mascot as a self-animated sprite", () => {
+    const svg = renderTemplate("pixel", { ...BASE_INPUT, defaultMascot: "octopuss" });
+    expect(svg).toContain("animateTransform");
+    expect(svg).toContain("crispEdges");
+  });
+
   it("produces valid transform attributes (no literal arithmetic strings)", () => {
     const svg = renderTemplate("arcade", { ...BASE_INPUT, templateId: "arcade" });
     expect(svg).not.toContain("32 +");

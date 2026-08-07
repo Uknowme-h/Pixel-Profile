@@ -115,7 +115,7 @@ export async function renderPreview(
 ): Promise<string> {
   const url = new URL(req.url);
 
-  const VALID_MASCOTS: DefaultMascotId[] = ["webswing", "headturn", "github", "copilot", "none"];
+  const VALID_MASCOTS: DefaultMascotId[] = ["webswing", "headturn", "github", "copilot", "octopuss", "none"];
   const VALID_BAR_ANIMS: BarStyle[] = ["ease-out", "bounce", "linear", "step"];
   const isHex = (s: string | null): s is string => !!s && /^#[0-9a-fA-F]{6}$/.test(s);
 

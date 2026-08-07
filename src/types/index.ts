@@ -1,5 +1,5 @@
 export type TemplateId = "pixel" | "arcade" | "fastfetch";
-export type DefaultMascotId = "webswing" | "headturn" | "github" | "copilot" | "none";
+export type DefaultMascotId = "webswing" | "headturn" | "github" | "copilot" | "octopuss" | "none";
 export type BarStyle = "ease-out" | "bounce" | "linear" | "step";
 
 export interface ThemeColors {
@@ -31,6 +31,7 @@ export interface ProfileConfig {
   templateId: TemplateId;
   theme: ThemeColors;
   fields: ProfileFields;
+  mascotSvgUrl?: string | null;
   configHash: string;
   updatedAt: string;
 }
