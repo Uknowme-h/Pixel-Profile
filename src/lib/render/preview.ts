@@ -2,7 +2,7 @@ import { renderTemplate, DEFAULT_THEME } from "@/lib/svg/templates";
 import { getCache } from "@/lib/data/store";
 import { getMascotSvgByUrl } from "@/lib/render/service";
 import { fetchProfileWithStatus } from "@/lib/github/api";
-import type { GithubDataCache, RenderInput, TemplateId, ThemeColors, DefaultMascotId } from "@/types";
+import type { GithubDataCache, RenderInput, TemplateId, ThemeColors, DefaultMascotId, BarStyle } from "@/types";
 
 /**
  * Live preview for the builder.
@@ -115,14 +115,24 @@ export async function renderPreview(
 ): Promise<string> {
   const url = new URL(req.url);
 
-  const VALID_MASCOTS: DefaultMascotId[] = ["webswing", "headturn", "none"];
+  const VALID_MASCOTS: DefaultMascotId[] = ["webswing", "headturn", "github", "copilot", "none"];
+  const VALID_BAR_ANIMS: BarStyle[] = ["ease-out", "bounce", "linear", "step"];
+  const isHex = (s: string | null): s is string => !!s && /^#[0-9a-fA-F]{6}$/.test(s);
+
   const rawMascot = url.searchParams.get("defaultMascot");
+  const rawBarAnim = url.searchParams.get("barAnim");
+  const barColors = [0, 1, 2, 3]
+    .map((i) => url.searchParams.get(`barColor${i}`))
+    .filter(isHex);
+
   const fields = {
     name: url.searchParams.get("name") || null,
     role: url.searchParams.get("role") || null,
     tagline: url.searchParams.get("tagline") || null,
     mascotSvgUrl: url.searchParams.get("mascot") || null,
     defaultMascot: (VALID_MASCOTS.includes(rawMascot as DefaultMascotId) ? rawMascot : null) as DefaultMascotId | null,
+    barColors: barColors.length > 0 ? barColors : null,
+    barAnimation: (VALID_BAR_ANIMS.includes(rawBarAnim as BarStyle) ? rawBarAnim : null) as BarStyle | null,
   };
 
   const theme: ThemeColors = {

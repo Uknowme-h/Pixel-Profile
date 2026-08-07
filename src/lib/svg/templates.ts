@@ -18,6 +18,16 @@ const HTURN_FH     = 119;
 const HTURN_DUR    = `${(HTURN_FRAMES / 18).toFixed(2)}s`; // 18 fps
 const HTURN_VALS   = Array.from({ length: HTURN_FRAMES }, (_, i) => -(i * HTURN_FW)).join(";");
 
+// Official GitHub mark (Invertocat) — single path from reference/SVG/GitHub_Invertocat_Black.svg.
+const GITHUB_MARK_PATH = "M56.7937 84.9688C44.4187 83.4688 35.7 74.5625 35.7 63.0313C35.7 58.3438 37.3875 53.2813 40.2 49.9063C38.9812 46.8125 39.1687 40.25 40.575 37.5313C44.325 37.0625 49.3875 39.0313 52.3875 41.75C55.95 40.625 59.7 40.0625 64.2937 40.0625C68.8875 40.0625 72.6375 40.625 76.0125 41.6563C78.9187 39.0313 84.075 37.0625 87.825 37.5313C89.1375 40.0625 89.325 46.625 88.1062 49.8125C91.1062 53.375 92.7 58.1563 92.7 63.0313C92.7 74.5625 83.9812 83.2813 71.4187 84.875C74.6062 86.9375 76.7625 91.4375 76.7625 96.5938L76.7625 106.344C76.7625 109.156 79.1062 110.75 81.9187 109.625C98.8875 103.156 112.2 86.1875 112.2 65.1875C112.2 38.6563 90.6375 17 64.1062 17C37.575 17 16.2 38.6562 16.2 65.1875C16.2 86 29.4187 103.25 47.2312 109.719C49.7625 110.656 52.2 108.969 52.2 106.438L52.2 98.9375C50.8875 99.5 49.2 99.875 47.7 99.875C41.5125 99.875 37.8562 96.5 35.2312 90.2188C34.2 87.6875 33.075 86.1875 30.9187 85.9063C29.7937 85.8125 29.4187 85.3438 29.4187 84.7813C29.4187 83.6563 31.2937 82.8125 33.1687 82.8125C35.8875 82.8125 38.2312 84.5 40.6687 87.9688C42.5437 90.6875 44.5125 91.9063 46.8562 91.9063C49.2 91.9063 50.7 91.0625 52.8562 88.9063C54.45 87.3125 55.6687 85.9063 56.7937 84.9688Z";
+
+// Official GitHub Copilot mark — 3 paths from reference/SVG/Copilot_Icon_Black.svg.
+const COPILOT_PATHS = [
+  "M111.688 83.9677C108.245 89.9488 88.2522 104.062 64 104.062C39.7478 104.062 19.7554 89.9488 16.3123 83.9677C16.0605 83.5303 15.9792 83.031 15.9792 82.5263L15.9792 71.8787C15.9792 71.4373 16.0474 70.9986 16.2107 70.5885C17.6996 66.8499 21.599 61.4192 26.6313 59.9621C27.2985 58.2494 28.2867 55.7456 29.2087 53.8974C29.0543 52.4833 29 51.0248 29 49.5512C29 44.2274 30.1285 39.5576 33.5288 36.0801C35.117 34.4559 37.0876 33.21 39.4246 32.2735C45.0217 27.7264 52.992 23.9011 63.9136 23.9011C74.8352 23.9011 82.9783 27.7264 88.5754 32.2735C90.9124 33.21 92.883 34.4559 94.4712 36.0801C97.8715 39.5576 99 44.2274 99 49.5512C99 51.0248 98.9457 52.4833 98.7913 53.8974C99.7133 55.7456 100.701 58.2494 101.369 59.9621C106.401 61.4192 110.3 66.8499 111.789 70.5885C111.953 70.9986 112.021 71.4373 112.021 71.8787L112.021 82.5263C112.021 83.031 111.939 83.5303 111.688 83.9677ZM67.253 48.2606C67.0828 46.9345 67.0018 45.747 66.9995 44.686L66.9995 44.6021C67.0048 41.5242 67.6776 39.5215 68.7524 38.2914C70.1172 36.7295 72.9379 35.5328 78.8829 36.1762C84.9059 36.828 88.2725 38.3229 90.1812 40.2749C92.0291 42.1648 92.9999 44.9922 92.9999 49.5512C92.9999 54.3951 92.3018 57.2568 90.767 58.9977C89.3075 60.6531 86.4335 62 80.1386 62C75.2994 62 72.5326 60.4261 70.7637 58.2493C68.8644 55.912 67.7955 52.4878 67.253 48.2606ZM60.747 48.2606C60.9172 46.9344 60.9982 45.747 61.0005 44.686L61.0005 44.6021C60.9952 41.5242 60.3224 39.5214 59.2476 38.2914C57.8828 36.7295 55.0621 35.5328 49.1171 36.1762C43.0941 36.828 39.7275 38.3229 37.8188 40.2749C35.9709 42.1647 35.0001 44.9922 35.0001 49.5512C35.0001 54.3951 35.6982 57.2568 37.233 58.9977C38.6925 60.6531 41.5665 62 47.8614 62C52.7006 62 55.4674 60.4261 57.2363 58.2493C59.1356 55.9119 60.2045 52.4878 60.747 48.2606ZM64.6889 59.9983C64.4592 59.9995 64.9185 59.9983 64.6889 59.9983C64.4594 59.9983 63.5408 59.9995 63.3111 59.9983C62.8877 60.7075 62.4168 61.3882 61.8926 62.0332C58.8139 65.8219 54.2182 68 47.8613 68C40.9615 68 35.9049 66.564 32.7324 62.9657C32.552 62.7611 32.3906 62.5469 32.3906 62.5469L32 62.9657L32 89.3023C37.7392 92.4213 50.0576 98.0184 64 98.0184C77.9424 98.0184 90.2608 92.4213 96 89.3023L96 62.9657L95.6094 62.5469C95.6094 62.5469 95.4772 62.728 95.2676 62.9657C92.0951 66.564 87.0385 68 80.1387 68C73.7818 68 69.1861 65.8219 66.1074 62.0332C65.5832 61.3882 65.1123 60.7075 64.6889 59.9983Z",
+  "M74 73C76.2091 73 78 74.7909 78 77L78 85C78 87.2092 76.2091 89 74 89C71.7909 89 70 87.2092 70 85L70 77C70 74.7909 71.7909 73 74 73Z",
+  "M54 73C56.2091 73 58 74.7909 58 77L58 85C58 87.2092 56.2091 89 54 89C51.7909 89 50 87.2092 50 85L50 77C50 74.7909 51.7909 73 54 73Z",
+];
+
 /**
  * Returns the two <clipPath> defs (webswing + headturn) for a given template
  * prefix. Both are always emitted so any user selection renders without error.
@@ -40,6 +50,7 @@ function spideySprite(
 ): string[] {
   if (choice === "none") return [];
   const isSwing = choice === "webswing";
+  if (!isSwing && choice !== "headturn") return [];
   const fw = isSwing ? SPIDEY_FW : HTURN_FW;
   const fh = isSwing ? SPIDEY_FH : HTURN_FH;
   const frames = isSwing ? SPIDEY_FRAMES : HTURN_FRAMES;
@@ -58,6 +69,43 @@ function spideySprite(
     `</g>`,
     `</g>`,
   ];
+}
+
+/**
+ * Renders a static logo mascot (GitHub mark / Copilot icon) into a given slot.
+ * Uniformly scaled to fit, centered, and colored with `fill`.
+ */
+function staticMascot(
+  choice: DefaultMascotId,
+  slot: { x: number; y: number; w: number; h: number },
+  fill: string
+): string {
+  const VB_W = 128;
+  const VB_H = 128;
+  const paths = choice === "copilot" ? COPILOT_PATHS : [GITHUB_MARK_PATH];
+  const scale = Math.min(slot.w / VB_W, slot.h / VB_H);
+  const dispW = VB_W * scale;
+  const dispH = VB_H * scale;
+  const sx = slot.x + Math.floor((slot.w - dispW) / 2);
+  const sy = slot.y + Math.floor((slot.h - dispH) / 2);
+  const body = paths.map((d) => `<path d="${d}"/>`).join("");
+  return `<g transform="translate(${sx}, ${sy}) scale(${scale.toFixed(4)})" fill="${fill}" opacity="0.95">${body}</g>`;
+}
+
+/**
+ * Unified dispatcher: animated sprite for webswing/headturn, static GitHub
+ * logo for github/copilot, nothing for none.
+ */
+function renderMascot(
+  choice: DefaultMascotId,
+  prefix: string,
+  slot: { x: number; y: number; w: number; h: number },
+  fill: string
+): string[] {
+  if (choice === "github" || choice === "copilot") {
+    return [staticMascot(choice, slot, fill)];
+  }
+  return spideySprite(choice, prefix, slot);
 }
 
 /**
@@ -112,6 +160,53 @@ function barFill(value: number, softMax: number, maxW: number): number {
 
 function fmt(n: number): string {
   return n.toLocaleString("en-US");
+}
+
+/** Map a BarStyle string to the numeric style slot used by animateBar. */
+function getAnimStyleNum(style: string | null | undefined): number | undefined {
+  if (!style) return undefined;
+  const map: Record<string, number> = { "ease-out": 0, bounce: 1, linear: 2, step: 3 };
+  const n = map[style];
+  return n !== undefined ? n : undefined;
+}
+
+/**
+ * Returns a SMIL <animate> element for a bar fill-in, varying the easing
+ * style by index so bars within the same card feel distinct.
+ *
+ * Styles (cycle by index % 4):
+ *  0 — ease-out  : fast start, decelerates
+ *  1 — bounce    : overshoots briefly then settles
+ *  2 — linear    : steady, no-frills
+ *  3 — step      : discrete jumps (retro XP-bar feel)
+ *
+ * @param fillW  Final bar width in pixels
+ * @param index  Bar index (0-based) — drives style + stagger
+ * @param begin  Animation begin offset in seconds
+ * @param maxW   Max allowed pixel width (caps bounce overshoot)
+ */
+function animateBar(fillW: number, index: number, begin: number, maxW = fillW, styleOverride?: number): string {
+  const b = `begin="${begin.toFixed(2)}s" fill="freeze"`;
+  const style = styleOverride !== undefined ? styleOverride : (index % 4);
+  if (style === 0) {
+    // ease-out
+    return `<animate attributeName="width" from="0" to="${fillW}" dur="0.55s" ${b} calcMode="spline" keyTimes="0;1" keySplines="0,0,0.2,1"/>`;
+  }
+  if (style === 1) {
+    // bounce-settle: overshoot ~10% then pull back to final
+    const over = Math.min(maxW, Math.round(fillW * 1.10));
+    const back = Math.round(fillW * 0.97);
+    return `<animate attributeName="width" values="0;${over};${back};${fillW}" keyTimes="0;0.62;0.82;1" dur="0.72s" ${b} calcMode="spline" keySplines="0.4,0,0.6,1;0.4,0,0.6,1;0.4,0,0.6,1"/>`;
+  }
+  if (style === 2) {
+    // linear
+    return `<animate attributeName="width" from="0" to="${fillW}" dur="0.45s" ${b}/>`;
+  }
+  // step: four discrete jumps — retro XP-bar feel
+  const q1 = Math.round(fillW * 0.30);
+  const q2 = Math.round(fillW * 0.60);
+  const q3 = Math.round(fillW * 0.85);
+  return `<animate attributeName="width" values="0;${q1};${q2};${q3};${fillW}" keyTimes="0;0.25;0.5;0.75;1" dur="0.64s" ${b} calcMode="discrete"/>`;
 }
 
 // ─── Fastfetch palette ────────────────────────────────────────────────────────
@@ -212,7 +307,7 @@ function renderFastfetch(input: RenderInput): string {
   } else {
     // Default mascot: user's choice, falling back to "headturn" for fastfetch
     const dm = (input.defaultMascot ?? "headturn") as DefaultMascotId;
-    p.push(...spideySprite(dm, "ff", { x: 14, y: 44, w: 334, h: 498 }));
+    p.push(...renderMascot(dm, "ff", { x: 14, y: 44, w: 334, h: 498 }, tFg));
   }
 
   // Vertical divider
@@ -296,22 +391,27 @@ function renderFastfetch(input: RenderInput): string {
   );
   ry += 20;
 
-  // Language bars
+  // Language bars — ANSI palette by default; overrideable per-bar via fields.barColors
   const barAreaW = 110;
   const labelW   = 90;
   const barX     = rx + labelW + 8;
+  const ffDefaultColors = [FF.blue, FF.purple, FF.orange, FF.green, FF.red];
+  const ffAnimStyle = getAnimStyleNum(input.fields.barAnimation);
 
-  for (const l of langs) {
+  langs.forEach((l, i) => {
     const fillW = Math.max(1, Math.floor((l.pct / 100) * barAreaW));
     const pct   = l.pct + "%";
+    const bColor = input.fields.barColors?.[i] ?? ffDefaultColors[i % ffDefaultColors.length];
     p.push(
       `<text x="${rx}" y="${ry}" font-family="${mono}" font-size="12" fill="${tMuted}">${esc(cut(l.name, 11))}</text>`,
       `<rect x="${barX}" y="${ry - 11}" width="${barAreaW}" height="11" rx="2" fill="${FF.barBg}"/>`,
-      `<rect x="${barX}" y="${ry - 11}" width="${fillW}" height="11" rx="2" fill="${tAccent}" opacity="0.85"/>`,
+      `<rect x="${barX}" y="${ry - 11}" width="0" height="11" rx="2" fill="${bColor}" opacity="0.85">`,
+      animateBar(fillW, i, i * 0.16, barAreaW, ffAnimStyle),
+      `</rect>`,
       `<text x="${barX + barAreaW + 8}" y="${ry}" font-family="${mono}" font-size="11" fill="${tMuted}">${pct}</text>`,
     );
     ry += 22;
-  }
+  });
 
   ry += 8;
 
@@ -487,7 +587,7 @@ function renderArcade(input: RenderInput): string {
   } else {
     // Default mascot: user's choice, falling back to "webswing" for arcade
     const dm = (input.defaultMascot ?? "webswing") as DefaultMascotId;
-    p.push(...spideySprite(dm, "ac", { x: lx + 34, y: charY + 30, w: lw - 68, h: charH - 56 }));
+    p.push(...renderMascot(dm, "ac", { x: lx + 34, y: charY + 30, w: lw - 68, h: charH - 56 }, tFg));
   }
 
   // Name / class below char select frame
@@ -512,15 +612,19 @@ function renderArcade(input: RenderInput): string {
   const skillLabelX = lx + 16;
   const skillBarX   = lx + lw - skillBarW - 20;
 
+  const acAnimStyle = getAnimStyleNum(input.fields.barAnimation);
+  const acDefaultSkillColors = [tAccent, AC.gold, AC.barDex, AC.barWis, AC.barCon];
+
   langs.slice(0, Math.min(5, Math.floor((skillsH - 46) / 26))).forEach((l, i) => {
     const sy    = skillsY + 44 + i * 26;
     const fillW = Math.max(1, Math.floor((l.pct / 100) * skillBarW));
-    // First bar uses accent color; rest use fixed semantic RPG colors
-    const barFillColor = i === 0 ? tAccent : i === 1 ? AC.gold : i === 2 ? AC.barDex : i === 3 ? AC.barWis : AC.barCon;
+    const barFillColor = input.fields.barColors?.[i] ?? acDefaultSkillColors[i] ?? tAccent;
     p.push(
       `<text x="${skillLabelX}" y="${sy}" font-family="${mono}" font-size="11" fill="${tMuted}">${esc(cut(l.name, 10).toUpperCase())}</text>`,
       `<rect x="${skillBarX}" y="${sy - 11}" width="${skillBarW}" height="12" fill="${AC.barBg}" stroke="${tAccent}" stroke-width="0.8"/>`,
-      `<rect x="${skillBarX + 1}" y="${sy - 10}" width="${fillW}" height="10" fill="${barFillColor}" opacity="0.9"/>`,
+      `<rect x="${skillBarX + 1}" y="${sy - 10}" width="0" height="10" fill="${barFillColor}" opacity="0.9">`,
+      animateBar(fillW, i, i * 0.15, skillBarW, acAnimStyle),
+      `</rect>`,
       `<text x="${skillBarX + skillBarW + 4}" y="${sy}" font-family="${mono}" font-size="10" fill="${AC.sub}">${l.pct}%</text>`,
     );
   });
@@ -563,7 +667,9 @@ function renderArcade(input: RenderInput): string {
     p.push(
       `<text x="${rx + 16}" y="${sy}" font-family="${mono}" font-size="12" fill="${AC.gold}" font-weight="bold">${s.label}</text>`,
       `<rect x="${statBarX}" y="${sy - 12}" width="${statBarW}" height="14" fill="${AC.barBg}" stroke="${tAccent}" stroke-width="0.8"/>`,
-      `<rect x="${statBarX + 1}" y="${sy - 11}" width="${fill}" height="12" fill="${s.color}" opacity="0.9"/>`,
+      `<rect x="${statBarX + 1}" y="${sy - 11}" width="0" height="12" fill="${s.color}" opacity="0.9">`,
+      animateBar(fill, i, i * 0.15, statBarW - 2, acAnimStyle),
+      `</rect>`,
       `<text x="${statNumX}" y="${sy}" text-anchor="end" font-family="${mono}" font-size="11" fill="${tMuted}">${fmt(s.val)} ${s.unit}</text>`,
     );
   });
@@ -703,17 +809,24 @@ function renderPixel(input: RenderInput): string {
     `<line x1="24" y1="${barY - 8}" x2="440" y2="${barY - 8}" stroke="${theme.muted}" stroke-width="1" stroke-dasharray="6 5" opacity="0.4"/>`,
   );
 
+  // Bar colors: user-set per slot, falling back to accent/fg alternating defaults
+  const pxDefaultColors = [theme.accent, theme.fg, theme.accent, theme.fg];
+  const pxDefaultOpacity = ["0.90", "0.75", "0.65", "0.55"];
+  const pxAnimStyle = getAnimStyleNum(input.fields.barAnimation);
+
   langs.forEach((l, i) => {
     const by    = barY + i * 28;
     const maxBW = 200;
     const fillW = Math.max(2, Math.floor((l.pct / 100) * maxBW));
     const lPix  = renderPixelText(cut(l.name, 8).toUpperCase(), { scale: 1, fill: theme.muted });
+    const color = input.fields.barColors?.[i] ?? pxDefaultColors[i % 4];
+    const opacity = input.fields.barColors?.[i] ? "0.90" : pxDefaultOpacity[i % 4];
     p.push(
       `<g transform="translate(24, ${by})" shape-rendering="crispEdges">${lPix.svg}</g>`,
-      // bar track
       `<rect x="90" y="${by - 1}" width="${maxBW}" height="9" fill="${theme.bg}" stroke="${theme.muted}" stroke-width="1" opacity="0.5" shape-rendering="crispEdges"/>`,
-      // bar fill
-      `<rect x="90" y="${by - 1}" width="${fillW}" height="9" fill="${theme.accent}" opacity="0.85" shape-rendering="crispEdges"/>`,
+      `<rect x="90" y="${by - 1}" width="0" height="9" fill="${color}" opacity="${opacity}" shape-rendering="crispEdges">`,
+      animateBar(fillW, i, i * 0.18, maxBW, pxAnimStyle),
+      `</rect>`,
     );
   });
 
@@ -734,7 +847,7 @@ function renderPixel(input: RenderInput): string {
   } else {
     // Default mascot: user's choice, falling back to "webswing" for pixel
     const dm = (input.defaultMascot ?? "webswing") as DefaultMascotId;
-    p.push(...spideySprite(dm, "px", { x: 468, y: 16, w: 256, h: 308 }));
+    p.push(...renderMascot(dm, "px", { x: 468, y: 16, w: 256, h: 308 }, theme.fg));
   }
 
   // Subtle corner accent

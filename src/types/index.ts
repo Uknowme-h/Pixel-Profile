@@ -1,5 +1,6 @@
 export type TemplateId = "pixel" | "arcade" | "fastfetch";
-export type DefaultMascotId = "webswing" | "headturn" | "none";
+export type DefaultMascotId = "webswing" | "headturn" | "github" | "copilot" | "none";
+export type BarStyle = "ease-out" | "bounce" | "linear" | "step";
 
 export interface ThemeColors {
   bg: string;
@@ -16,6 +17,10 @@ export interface ProfileFields {
   mascotSvgUrl?: string | null;
   /** Which built-in animation to show when no custom mascot is uploaded. */
   defaultMascot?: DefaultMascotId | null;
+  /** Up to 4 custom hex colors for language/stat bars (index 0–3). */
+  barColors?: string[] | null;
+  /** Fill-in animation style applied to all bars. */
+  barAnimation?: BarStyle | null;
 }
 
 /** The persisted user profile configuration row. */

@@ -52,7 +52,7 @@ the shipped routes are validation-safe without them.
 2. **GitHub App**: create one at GitHub → Settings → Developer settings. Set
    `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY` (raw/blob with `\n`), and install
    it on target accounts. Store env vars in Vercel.
-3. **Refresh cron**: `.github/workflows/refresh.yml` runs every 30 min. Set the
+3. **Refresh cron**: `.github/workflows/refresh.yml` runs once daily (00:00 UTC). Set the
    same secrets under repo → Settings → Secrets and variables → Actions
    (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `GITHUB_APP_ID`,
    `GITHUB_APP_PRIVATE_KEY`).

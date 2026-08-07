@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { getServiceClient } from "../src/lib/supabase/server";
 import { fetchProfileWithStatus } from "../src/lib/github/api";
 import {
@@ -11,15 +12,23 @@ import {
  * Phase 5 — background refresh.
  *
  * Runs inside a GitHub Actions `schedule:` workflow (Vercel Cron Jobs are
- * Pro-only). Pulls a small batch of the stalest configured profiles, fetches
- * fresh derived data from GitHub GraphQL, writes it back to Supabase, and
- * exits. The writes double as a keep-alive so the free Supabase project stays
- * awake. Fail-fast: 404 usernames get flagged, not retried forever.
+ * Pro-only). Pulls a batch of the stalest configured profiles once a day,
+ * fetches fresh derived data from GitHub GraphQL, writes it back to Supabase,
+ * and exits. The writes double as a keep-alive so the free Supabase project
+ * stays awake. Fail-fast: 404 usernames get flagged, not retried forever.
+ *
+ * Locally, load `.env` / `.env.local` when present. In Actions the same vars
+ * are injected via workflow `env:` — requiring `--env-file=.env` breaks CI
+ * because that file is never checked in.
  */
+for (const file of [".env", ".env.local"]) {
+  if (existsSync(file)) process.loadEnvFile(file);
+}
 
 // Skip usernames above this failure count in a sweep (don't burn rate budget).
 const REFRESH_SKIP_AFTER_FAILURES = 3;
-const REFRESH_BATCH_SIZE = Number(process.env.REFRESH_BATCH_SIZE ?? 20);
+// Daily cron: default high enough to cover early user counts in one run.
+const REFRESH_BATCH_SIZE = Number(process.env.REFRESH_BATCH_SIZE ?? 100);
 
 async function run(): Promise<void> {
   const supabase = getServiceClient();
@@ -29,7 +38,7 @@ async function run(): Promise<void> {
   if (users.length > 0) {
     batch = await pickBatch(users);
   } else {
-    // No sandbox: fall back to the stalest cache rows.
+    // No configs yet: fall back to the stalest cache rows.
     const stale = await supabase
       .from("github_data_cache")
       .select("username, failure_count")
@@ -99,8 +108,41 @@ async function run(): Promise<void> {
   }
 }
 
-function pickBatch(users: string[]) {
-  return users.slice(0, REFRESH_BATCH_SIZE).map((username) => ({ username, failureCount: 0 }));
+/** Never-fetched first, then oldest `fetched_at` — so a daily run rotates fairly. */
+async function pickBatch(users: string[]) {
+  const { data, error } = await getServiceClient()
+    .from("github_data_cache")
+    .select("username, failure_count, fetched_at")
+    .in("username", users);
+  if (error) throw error;
+
+  const byUser = new Map(
+    (data ?? []).map((r) => [
+      r.username as string,
+      {
+        failureCount: (r.failure_count as number | null) ?? 0,
+        fetchedAt: (r.fetched_at as string | null) ?? null,
+      },
+    ]),
+  );
+
+  return users
+    .map((username) => {
+      const row = byUser.get(username);
+      return {
+        username,
+        failureCount: row?.failureCount ?? 0,
+        fetchedAt: row?.fetchedAt ?? null,
+      };
+    })
+    .sort((a, b) => {
+      if (a.fetchedAt === null && b.fetchedAt !== null) return -1;
+      if (a.fetchedAt !== null && b.fetchedAt === null) return 1;
+      if (a.fetchedAt === null || b.fetchedAt === null) return 0;
+      return a.fetchedAt.localeCompare(b.fetchedAt);
+    })
+    .slice(0, REFRESH_BATCH_SIZE)
+    .map(({ username, failureCount }) => ({ username, failureCount }));
 }
 
 run().catch((err) => {

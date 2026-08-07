@@ -2,8 +2,9 @@ name: refresh-github-data
 
 on:
   schedule:
-    # Free-tier, high-frequency sweep: every 30 min (edit as needed).
-    - cron: "*/30 * * * *"
+    # Daily at 00:00 UTC — matches the ~24h GitHub data TTL. Manual runs via
+    # workflow_dispatch still work anytime.
+    - cron: "0 0 * * *"
   workflow_dispatch: {}
 
 env:
@@ -11,7 +12,7 @@ env:
   SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
   GITHUB_APP_ID: ${{ secrets.APP_ID }}
   GITHUB_APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
-  REFRESH_BATCH_SIZE: ${{ vars.REFRESH_BATCH_SIZE || '20' }}
+  REFRESH_BATCH_SIZE: ${{ vars.REFRESH_BATCH_SIZE || '100' }}
 
 permissions:
   contents: read

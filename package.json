@@ -9,7 +9,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "refresh": "tsx --env-file=.env scripts/refresh.ts"
+    "refresh": "tsx scripts/refresh.ts"
   },
   "dependencies": {
     "@octokit/graphql": "^9.0.4",
