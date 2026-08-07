@@ -113,7 +113,6 @@ export default function Builder() {
   // This way the server never sees more than ~3 req/s no matter how fast the
   // user types, and in-flight requests are never stacked up.
   useEffect(() => {
-    if (!previewUrl) { setDisplayUrl(null); return; }
     const id = window.setTimeout(() => setDisplayUrl(previewUrl), 300);
     return () => window.clearTimeout(id);
   }, [previewUrl]);
@@ -145,7 +144,7 @@ export default function Builder() {
     } finally {
       setSaving(false);
     }
-  }, [session, username, templateId, theme, name, role, tagline, mascotUrl]);
+  }, [session, username, templateId, theme, name, role, tagline, mascotUrl, defaultMascot, barColors, barAnimation]);
 
   const uploadMascot = useCallback(
     async (file: File) => {

@@ -496,7 +496,6 @@ function renderArcade(input: RenderInput): string {
   const H = 640;
 
   const loginRaw  = data.login || "user";
-  const login     = esc(loginRaw.toUpperCase());
   const loginLo   = esc(loginRaw);
   const nameRaw   = cut(fields.name || data.name || data.login, 22);
   const name      = esc(nameRaw.toUpperCase());
