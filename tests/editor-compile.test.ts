@@ -50,7 +50,7 @@ describe("editor compile", () => {
     const svg = compileScene(starterScene(), DEMO_COMPILE_DATA);
     expect(svg).toContain("<svg");
     expect(svg).toContain('xmlns="http://www.w3.org/2000/svg"');
-    expect(svg).toContain("Pixel Dev");
+    expect(svg).toContain("Your text");
     expect(svg).toContain("1800");
     expect(svg).toContain("<animate");
     expect(svg).not.toContain("<script");

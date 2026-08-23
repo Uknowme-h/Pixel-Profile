@@ -16,7 +16,7 @@ export function starterScene(): EditorScene {
     background: { fill: "#111111", radius: 0 },
     nodes: [
       node("text", {
-        props: { content: "{{name}}", fill: "#f5f5f0", fontSize: 32, weight: "bold" },
+        props: { content: "Your text", fill: "#f5f5f0", fontSize: 32, weight: "bold" },
       }),
       node("shape.line", { y: 72, w: 280 }),
       node("statPill", {

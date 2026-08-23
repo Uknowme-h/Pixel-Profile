@@ -6,7 +6,7 @@ export const MAX_ARTBOARD_W = 1280;
 export const MAX_ARTBOARD_H = 640;
 export const MIN_ARTBOARD = 200;
 export const SNAP = 8;
-export const MAX_SCENE_BYTES = 200_000;
+export const MAX_SCENE_BYTES = 1_400_000;
 
 export type BuiltInBlockType =
   | "text"
@@ -16,7 +16,8 @@ export type BuiltInBlockType =
   | "socialButton"
   | "shape.rect"
   | "shape.ellipse"
-  | "shape.line";
+  | "shape.line"
+  | "sprite";
 
 export type BlockType = BuiltInBlockType;
 

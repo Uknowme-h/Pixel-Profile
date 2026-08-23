@@ -3,7 +3,7 @@ import type { BuiltInBlockType, SceneNode } from "@/lib/editor/types";
 export interface BlockDef {
   type: BuiltInBlockType;
   label: string;
-  category: "content" | "data" | "shape";
+  category: "content" | "data" | "shape" | "asset";
   hint: string;
   defaults: Omit<SceneNode, "id" | "z">;
 }
@@ -13,7 +13,7 @@ export const BLOCK_REGISTRY: BlockDef[] = [
     type: "text",
     label: "Text",
     category: "content",
-    hint: "Heading or line. Bind {{name}}.",
+    hint: "Type anything. Optional {{name}} token.",
     defaults: {
       type: "text",
       x: 32,
@@ -22,7 +22,7 @@ export const BLOCK_REGISTRY: BlockDef[] = [
       h: 40,
       animation: "none",
       visible: true,
-      props: { content: "{{name}}", fill: "#f5f5f0", fontSize: 28, weight: "bold" },
+      props: { content: "Your text", fill: "#f5f5f0", fontSize: 28, weight: "bold" },
     },
   },
   {
@@ -135,6 +135,22 @@ export const BLOCK_REGISTRY: BlockDef[] = [
       animation: "none",
       visible: true,
       props: { stroke: "#c8f54a", strokeWidth: 2 },
+    },
+  },
+  {
+    type: "sprite",
+    label: "GIF sprite",
+    category: "asset",
+    hint: "Upload a GIF — compiled to SMIL.",
+    defaults: {
+      type: "sprite",
+      x: 480,
+      y: 200,
+      w: 128,
+      h: 128,
+      animation: "none",
+      visible: true,
+      props: { sheet: "", frames: 1, fw: 128, fh: 128, dur: "1s", fps: 8 },
     },
   },
 ];

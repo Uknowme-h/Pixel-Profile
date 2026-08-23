@@ -9,12 +9,16 @@ export function Inspector({
   onScene,
   onNode,
   onDelete,
+  onBringFront,
+  onSendBack,
 }: {
   scene: EditorScene;
   node: SceneNode | null;
   onScene: (patch: Partial<EditorScene>) => void;
   onNode: (patch: Partial<SceneNode> | { props: SceneNode["props"] }) => void;
   onDelete: () => void;
+  onBringFront?: () => void;
+  onSendBack?: () => void;
 }) {
   return (
     <aside className="flex w-[240px] shrink-0 flex-col overflow-y-auto border-l border-[#DCDCDC] bg-[#F8F8F8]">
@@ -81,7 +85,35 @@ export function Inspector({
               ))}
             </select>
           </label>
-          {typeof node.props.content === "string" && (
+          {node.type === "text" && (
+            <>
+              <label className="block text-[11px] text-[#777]">
+                Text
+                <textarea
+                  value={String(node.props.content ?? "")}
+                  onChange={(e) => onNode({ props: { ...node.props, content: e.target.value } })}
+                  rows={3}
+                  placeholder="Type anything. Use {{name}} or {{stats.commits}} to pull GitHub data."
+                  className="mt-1 block w-full resize-y border border-[#E0E0E0] bg-white px-2 py-1.5 font-mono text-xs text-[#111] placeholder:text-[#bbb] focus:border-[#111] focus:outline-none"
+                />
+              </label>
+              <p className="text-[10px] leading-snug text-[#999]">
+                Double-click the block on the sheet to type there too.
+              </p>
+              <label className="block text-[11px] text-[#777]">
+                Size
+                <input
+                  type="number"
+                  min={8}
+                  max={96}
+                  value={Number(node.props.fontSize ?? 22)}
+                  onChange={(e) => onNode({ props: { ...node.props, fontSize: Number(e.target.value) } })}
+                  className="ml-2 w-16 border-b border-[#E0E0E0] bg-transparent py-0.5 font-mono text-xs text-[#111] focus:border-[#111] focus:outline-none"
+                />
+              </label>
+            </>
+          )}
+          {typeof node.props.content === "string" && node.type !== "text" && (
             <Field label="Content" value={String(node.props.content)} onChange={(v) => onNode({ props: { ...node.props, content: v } })} />
           )}
           {typeof node.props.label === "string" && (
@@ -105,6 +137,27 @@ export function Inspector({
           {typeof node.props.bar === "string" && (
             <ColorField label="Bar" value={String(node.props.bar)} onChange={(v) => onNode({ props: { ...node.props, bar: v } })} />
           )}
+          {node.type === "sprite" && (
+            <p className="font-mono text-[11px] text-[#777]">
+              {Number(node.props.frames ?? 1)} frames · {Number(node.props.fw ?? 0)}×{Number(node.props.fh ?? 0)} · {String(node.props.fps ?? "")} fps
+            </p>
+          )}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={onBringFront}
+              className="flex-1 border border-[#E0E0E0] bg-white px-2 py-1.5 text-[11px] hover:border-[#111]"
+            >
+              Bring front
+            </button>
+            <button
+              type="button"
+              onClick={onSendBack}
+              className="flex-1 border border-[#E0E0E0] bg-white px-2 py-1.5 text-[11px] hover:border-[#111]"
+            >
+              Send back
+            </button>
+          </div>
           <label className="flex items-center gap-2 text-[11px] text-[#777]">
             <input
               type="checkbox"

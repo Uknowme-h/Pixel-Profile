@@ -3,7 +3,7 @@
 import { AppNav } from "@/components/app-nav";
 import { EditorCanvas } from "@/components/editor/canvas";
 import { Inspector } from "@/components/editor/inspector";
-import { Palette } from "@/components/editor/palette";
+import { Palette, type GifPlace } from "@/components/editor/palette";
 import { PreviewPane } from "@/components/editor/preview-pane";
 import { blockDef, newNodeId } from "@/lib/editor/registry";
 import { starterScene } from "@/lib/editor/starter";
@@ -106,7 +106,7 @@ export default function EditorShell() {
   const selected = scene.nodes.find((n) => n.id === selectedId) ?? null;
 
   const addBlock = useCallback((type: BuiltInBlockType, x?: number, y?: number) => {
-    if (scene.nodes.length >= MAX_NODES) return;
+    if (type === "sprite" || scene.nodes.length >= MAX_NODES) return;
     const def = blockDef(type);
     const node: SceneNode = {
       ...def.defaults,
@@ -118,6 +118,100 @@ export default function EditorShell() {
     pushHistory({ ...scene, nodes: [...scene.nodes, node] });
     setSelectedId(node.id);
   }, [scene, pushHistory]);
+
+  const addGif = useCallback(
+    async (file: File, place: GifPlace = "stamp", x?: number, y?: number) => {
+      if (scene.nodes.length >= MAX_NODES) return;
+      setSaveHint("Converting GIF…");
+      try {
+        const qs = place === "frame" ? `?w=${scene.width}&h=${scene.height}` : "";
+        const res = await fetch(`/api/editor/gif${qs}`, {
+          method: "POST",
+          headers: { "Content-Type": "image/gif" },
+          body: file,
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? "gif failed");
+        const def = blockDef("sprite");
+        const props = {
+          sheet: String(data.sheet),
+          frames: Number(data.frames),
+          fw: Number(data.width),
+          fh: Number(data.height),
+          dur: String(data.dur),
+          fps: Number(data.fps),
+        };
+        if (place === "frame") {
+          const frame: SceneNode = {
+            ...def.defaults,
+            id: newNodeId(),
+            x: 0,
+            y: 0,
+            w: scene.width,
+            h: scene.height,
+            z: 0,
+            locked: true,
+            animation: "none",
+            props,
+          };
+          const rest = scene.nodes.map((n) => ({ ...n, z: n.z + 1 }));
+          pushHistory({ ...scene, nodes: [frame, ...rest] });
+          setSelectedId(frame.id);
+          setSaveHint(
+            `${data.frames} frames · GIF is the sheet (${data.width}×${data.height} SMIL). Unlock to move.`,
+          );
+          return;
+        }
+        const node: SceneNode = {
+          ...def.defaults,
+          id: newNodeId(),
+          x: x ?? def.defaults.x,
+          y: y ?? def.defaults.y,
+          w: Number(data.width) || def.defaults.w,
+          h: Number(data.height) || def.defaults.h,
+          z: scene.nodes.reduce((m, n) => Math.max(m, n.z), 0) + 1,
+          animation: "none",
+          props,
+        };
+        pushHistory({ ...scene, nodes: [...scene.nodes, node] });
+        setSelectedId(node.id);
+        setSaveHint(
+          data.sourceWidth && (data.sourceWidth !== data.width || data.sourceHeight !== data.height)
+            ? `${data.frames} frames · ${data.sourceWidth}×${data.sourceHeight} → ${data.width}×${data.height} SMIL`
+            : `${data.frames} frames compiled to SMIL`,
+        );
+      } catch (err) {
+        setSaveHint(err instanceof Error ? err.message : "gif failed");
+      }
+    },
+    [scene, pushHistory],
+  );
+
+  const raiseNode = useCallback((id: string) => {
+    setScene((s) => {
+      const cur = s.nodes.find((n) => n.id === id);
+      if (!cur || cur.locked) return s;
+      const max = s.nodes.reduce((m, n) => Math.max(m, n.z), 0);
+      if (cur.z >= max) return s;
+      return { ...s, nodes: s.nodes.map((n) => (n.id === id ? { ...n, z: max + 1 } : n)) };
+    });
+  }, []);
+
+  const bringSelectedFront = useCallback(() => {
+    if (!selectedId) return;
+    raiseNode(selectedId);
+  }, [selectedId, raiseNode]);
+
+  const sendSelectedBack = useCallback(() => {
+    if (!selectedId) return;
+    setScene((s) => {
+      if (!s.nodes.some((n) => n.id === selectedId)) return s;
+      return {
+        ...s,
+        nodes: s.nodes.map((n) => (n.id === selectedId ? { ...n, z: 0 } : { ...n, z: n.z + 1 })),
+      };
+    });
+  }, [selectedId]);
 
   const patchNode = useCallback((id: string, patch: Partial<SceneNode>) => {
     setScene((s) => ({
@@ -226,7 +320,7 @@ export default function EditorShell() {
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <Palette onAdd={(t) => addBlock(t)} />
+        <Palette onAdd={(t) => addBlock(t)} onGif={(f, place) => void addGif(f, place)} />
         <div className="flex min-w-0 min-h-0 flex-1 flex-col">
           <EditorCanvas
             scene={scene}
@@ -234,6 +328,8 @@ export default function EditorShell() {
             onSelect={setSelectedId}
             onPatch={patchNode}
             onDropBlock={(type, x, y) => addBlock(type, x, y)}
+            onDropGif={(file, x, y) => void addGif(file, "stamp", x, y)}
+            onRaise={raiseNode}
           />
           <PreviewPane svg={svg} error={previewError} />
         </div>
@@ -250,6 +346,8 @@ export default function EditorShell() {
             }
           }}
           onDelete={deleteSelected}
+          onBringFront={bringSelectedFront}
+          onSendBack={sendSelectedBack}
         />
       </div>
 

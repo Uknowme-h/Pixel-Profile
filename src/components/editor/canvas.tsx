@@ -19,15 +19,20 @@ export function EditorCanvas({
   onSelect,
   onPatch,
   onDropBlock,
+  onDropGif,
+  onRaise,
 }: {
   scene: EditorScene;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   onPatch: (id: string, patch: Partial<SceneNode>) => void;
   onDropBlock: (type: BuiltInBlockType, x: number, y: number) => void;
+  onDropGif?: (file: File, x: number, y: number) => void;
+  onRaise?: (id: string) => void;
 }) {
   const boardRef = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const clientToBoard = useCallback((clientX: number, clientY: number) => {
     const el = boardRef.current;
@@ -72,7 +77,10 @@ export function EditorCanvas({
           onPointerUp={() => setDrag(null)}
           onPointerLeave={() => setDrag(null)}
           onClick={(e) => {
-            if (e.target === e.currentTarget) onSelect(null);
+            if (e.target === e.currentTarget) {
+              setEditingId(null);
+              onSelect(null);
+            }
           }}
           onDragOver={(e) => {
             e.preventDefault();
@@ -80,6 +88,14 @@ export function EditorCanvas({
           }}
           onDrop={(e) => {
             e.preventDefault();
+            const gif = [...e.dataTransfer.files].find(
+              (f) => f.type === "image/gif" || f.name.toLowerCase().endsWith(".gif"),
+            );
+            if (gif) {
+              const p = clientToBoard(e.clientX, e.clientY);
+              onDropGif?.(gif, snap(p.x), snap(p.y));
+              return;
+            }
             const type = e.dataTransfer.getData(BLOCK_MIME) as BuiltInBlockType;
             if (!type) return;
             const p = clientToBoard(e.clientX, e.clientY);
@@ -94,13 +110,21 @@ export function EditorCanvas({
                 key={n.id}
                 node={n}
                 selected={n.id === selectedId}
+                editing={n.id === editingId}
                 onPointerDown={(e) => {
                   e.stopPropagation();
                   onSelect(n.id);
-                  if (n.locked) return;
+                  onRaise?.(n.id);
+                  if (n.locked || n.id === editingId) return;
                   const p = clientToBoard(e.clientX, e.clientY);
                   (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
                   setDrag({ kind: "move", id: n.id, ox: p.x - n.x, oy: p.y - n.y });
+                }}
+                onDoubleClick={() => {
+                  if (n.type !== "text" || n.locked) return;
+                  setDrag(null);
+                  setEditingId(n.id);
+                  onSelect(n.id);
                 }}
                 onResizeDown={(e) => {
                   e.stopPropagation();
@@ -108,6 +132,10 @@ export function EditorCanvas({
                   const p = clientToBoard(e.clientX, e.clientY);
                   setDrag({ kind: "resize", id: n.id, ox: p.x, oy: p.y, ow: n.w, oh: n.h });
                 }}
+                onChangeContent={(content) => {
+                  onPatch(n.id, { props: { ...n.props, content } });
+                }}
+                onStopEdit={() => setEditingId(null)}
               />
             ))}
         </div>
@@ -119,30 +147,61 @@ export function EditorCanvas({
 function NodeView({
   node,
   selected,
+  editing,
   onPointerDown,
+  onDoubleClick,
   onResizeDown,
+  onChangeContent,
+  onStopEdit,
 }: {
   node: SceneNode;
   selected: boolean;
+  editing: boolean;
   onPointerDown: (e: React.PointerEvent) => void;
+  onDoubleClick: () => void;
   onResizeDown: (e: React.PointerEvent) => void;
+  onChangeContent: (content: string) => void;
+  onStopEdit: () => void;
 }) {
   return (
     <div
-      className={`absolute cursor-grab touch-none select-none ${selected ? "z-10" : ""}`}
+      className={`absolute touch-none ${editing ? "cursor-text" : "cursor-grab"}`}
       style={{
         left: node.x,
         top: node.y,
         width: node.w,
         height: node.h,
+        zIndex: node.z,
         transform: node.rotation ? `rotate(${node.rotation}deg)` : undefined,
-        outline: selected ? "1px solid #c8f54a" : "1px solid transparent",
+        outline: selected || editing ? "1px solid #c8f54a" : "1px solid transparent",
         outlineOffset: 2,
       }}
-      onPointerDown={onPointerDown}
+      onPointerDown={editing ? (e) => e.stopPropagation() : onPointerDown}
+      onDoubleClick={(e) => {
+        e.stopPropagation();
+        onDoubleClick();
+      }}
     >
-      <NodeFace node={node} />
-      {selected && (
+      {editing && node.type === "text" ? (
+        <textarea
+          autoFocus
+          value={String(node.props.content ?? "")}
+          onChange={(e) => onChangeContent(e.target.value)}
+          onBlur={onStopEdit}
+          onKeyDown={(e) => {
+            e.stopPropagation();
+            if (e.key === "Escape") onStopEdit();
+          }}
+          className="h-full w-full resize-none bg-transparent font-mono leading-none focus:outline-none"
+          style={{
+            color: String(node.props.fill ?? "#f5f5f0"),
+            fontSize: Number(node.props.fontSize ?? 22),
+          }}
+        />
+      ) : (
+        <NodeFace node={node} />
+      )}
+      {selected && !editing && (
         <button
           type="button"
           aria-label="Resize"
@@ -162,7 +221,7 @@ function NodeFace({ node }: { node: SceneNode }) {
     return (
       <div
         className="h-full w-full overflow-hidden font-mono leading-none"
-        style={{ color: String(node.props.fill ?? "#f5f5f0"), fontSize: Number(node.props.fontSize ?? 22) }}
+        style={{ color: String(node.props.fill ?? "#f5f5f0"), fontSize: Number(node.props.fontSize ?? 22), whiteSpace: "pre-wrap" }}
       >
         {String(node.props.content ?? "")}
       </div>
@@ -206,6 +265,23 @@ function NodeFace({ node }: { node: SceneNode }) {
           </div>
         ))}
       </div>
+    );
+  }
+  if (node.type === "sprite") {
+    const sheet = String(node.props.sheet ?? "");
+    const frames = Math.max(1, Number(node.props.frames ?? 1));
+    return (
+      <div
+        className="h-full w-full"
+        style={{
+          backgroundImage: sheet ? `url(${sheet})` : undefined,
+          backgroundColor: sheet ? undefined : "#1c1c1a",
+          backgroundSize: `${frames * 100}% 100%`,
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "0 0",
+          imageRendering: "pixelated",
+        }}
+      />
     );
   }
   return (

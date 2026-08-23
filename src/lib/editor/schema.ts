@@ -21,6 +21,7 @@ const BLOCK_TYPES = new Set<BlockType>([
   "shape.rect",
   "shape.ellipse",
   "shape.line",
+  "sprite",
 ]);
 
 const ANIMATIONS = new Set<AnimationPresetId>(["none", "fade", "pulse", "float", "spin", "wiggle"]);
@@ -48,6 +49,11 @@ function parseProps(raw: unknown): Record<string, string | number | boolean> {
   for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
     if (!/^[a-zA-Z][a-zA-Z0-9_]{0,31}$/.test(k)) continue;
     if (typeof v === "string") {
+      if (k === "sheet") {
+        if (v.length > 1_200_000 || !/^data:image\/png;base64,[A-Za-z0-9+/]+=*$/.test(v)) continue;
+        out[k] = v;
+        continue;
+      }
       if (v.length > 500) continue;
       out[k] = v;
     } else if (typeof v === "number" && Number.isFinite(v)) {

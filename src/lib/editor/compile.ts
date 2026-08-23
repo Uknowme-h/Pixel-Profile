@@ -3,6 +3,7 @@ import { DEMO_COMPILE_DATA } from "@/lib/editor/demo";
 import { parseScene } from "@/lib/editor/schema";
 import { resolveNodeProps } from "@/lib/editor/tokens";
 import type { CompileData, EditorScene, SceneNode } from "@/lib/editor/types";
+import { spriteXValues } from "@/lib/svg/gif";
 
 const FONT = "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace";
 
@@ -41,8 +42,14 @@ function renderText(node: SceneNode): string {
   const fill = hex(node.props.fill, "#f5f5f0");
   const size = num(node.props.fontSize, 22);
   const weight = str(node.props.weight, "normal") === "bold" ? "bold" : "normal";
-  const content = xml(str(node.props.content, ""));
-  return `<text x="0" y="${size}" fill="${fill}" font-size="${size}" font-family="${FONT}" font-weight="${weight}">${content}</text>`;
+  const lines = str(node.props.content, "").split(/\r?\n/);
+  const tspans = lines
+    .map((line, i) => {
+      const dy = i === 0 ? size : Math.round(size * 1.25);
+      return `<tspan x="0" dy="${dy}">${xml(line.length ? line : " ")}</tspan>`;
+    })
+    .join("");
+  return `<text fill="${fill}" font-size="${size}" font-family="${FONT}" font-weight="${weight}">${tspans}</text>`;
 }
 
 function renderStatPill(node: SceneNode): string {
@@ -135,6 +142,29 @@ function renderLine(node: SceneNode): string {
   return `<line x1="0" y1="${y}" x2="${node.w}" y2="${y}" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="square"/>`;
 }
 
+function renderSprite(node: SceneNode): string {
+  const sheet = str(node.props.sheet, "");
+  if (!sheet.startsWith("data:image/png;base64,")) return "";
+  const fw = Math.max(1, Math.floor(num(node.props.fw, node.w)));
+  const fh = Math.max(1, Math.floor(num(node.props.fh, node.h)));
+  const frames = Math.max(1, Math.min(48, Math.floor(num(node.props.frames, 1))));
+  const dur = str(node.props.dur, "1s");
+  if (!/^\d+(\.\d+)?s$/.test(dur)) return "";
+  const clip = `${xml(node.id)}-clip`;
+  const sx = node.w / fw;
+  const sy = node.h / fh;
+  const anim =
+    frames > 1
+      ? `<animate attributeName="x" values="${spriteXValues(frames, fw)}" dur="${dur}" repeatCount="indefinite" calcMode="discrete"/>`
+      : "";
+  return [
+    `<defs><clipPath id="${clip}"><rect x="0" y="0" width="${fw}" height="${fh}"/></clipPath></defs>`,
+    `<g clip-path="url(#${clip})" transform="scale(${sx.toFixed(4)} ${sy.toFixed(4)})">`,
+    `<image href="${sheet}" width="${fw * frames}" height="${fh}" x="0" y="0">${anim}</image>`,
+    `</g>`,
+  ].join("");
+}
+
 function renderInner(node: SceneNode, data: CompileData): string {
   switch (node.type) {
     case "text":
@@ -153,6 +183,8 @@ function renderInner(node: SceneNode, data: CompileData): string {
       return renderEllipse(node);
     case "shape.line":
       return renderLine(node);
+    case "sprite":
+      return renderSprite(node);
     default:
       return "";
   }
