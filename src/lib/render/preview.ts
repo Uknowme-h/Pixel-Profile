@@ -2,7 +2,7 @@ import { renderTemplate, DEFAULT_THEME } from "@/lib/svg/templates";
 import { getCache } from "@/lib/data/store";
 import { getMascotSvgByUrl } from "@/lib/render/service";
 import { fetchProfileWithStatus } from "@/lib/github/api";
-import type { GithubDataCache, RenderInput, TemplateId, ThemeColors, DefaultMascotId, BarStyle } from "@/types";
+import type { GithubDataCache, RenderInput, ClassicTemplateId, ThemeColors, DefaultMascotId, BarStyle } from "@/types";
 
 /**
  * Live preview for the builder.
@@ -111,7 +111,7 @@ const DEMO_DATA = {
 
 export async function renderPreview(
   req: Request,
-  templateId: TemplateId
+  templateId: ClassicTemplateId
 ): Promise<string> {
   const url = new URL(req.url);
 

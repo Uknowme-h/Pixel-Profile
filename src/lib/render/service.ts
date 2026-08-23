@@ -1,7 +1,9 @@
 import { getConfigByUsername, getCache, upsertCache } from "@/lib/data/store";
+import { compileScene } from "@/lib/editor/compile";
+import { parseScene } from "@/lib/editor/schema";
 import { renderTemplate } from "@/lib/svg/templates";
 import { fetchProfileWithStatus } from "@/lib/github/api";
-import type { RenderInput } from "@/types";
+import type { ClassicTemplateId, RenderInput } from "@/types";
 
 /**
  * Phase 5 — render service.
@@ -75,29 +77,40 @@ export async function renderProfile(username: string): Promise<ResolveResult> {
     if (fetched) mascotSvg = fetched;
   }
 
+  const compileData = {
+    login: data.login,
+    name: data.name,
+    bio: data.bio,
+    totalContributions: data.totalContributions,
+    commits: data.commits,
+    pullRequests: data.pullRequests,
+    issues: data.issues,
+    reposContributed: data.reposContributed,
+    languages: data.languages,
+    starredRepos: data.starredRepos,
+    pinnedRepos: data.pinnedRepos,
+  };
+
+  if (config.templateId === "canvas") {
+    try {
+      const scene = parseScene(config.fields.scene ?? {});
+      return { svg: compileScene(scene, compileData) };
+    } catch {
+      return { error: "render_error" };
+    }
+  }
+
   const input: RenderInput = {
     templateId: config.templateId,
     theme: config.theme,
     fields: config.fields,
-    data: {
-      login: data.login,
-      name: data.name,
-      bio: data.bio,
-      totalContributions: data.totalContributions,
-      commits: data.commits,
-      pullRequests: data.pullRequests,
-      issues: data.issues,
-      reposContributed: data.reposContributed,
-      languages: data.languages,
-      starredRepos: data.starredRepos,
-      pinnedRepos: data.pinnedRepos,
-    },
+    data: compileData,
     mascotSvg,
     defaultMascot: config.fields.defaultMascot,
   };
 
   try {
-    return { svg: renderTemplate(config.templateId, input) };
+    return { svg: renderTemplate(config.templateId as ClassicTemplateId, input) };
   } catch {
     return { error: "render_error" };
   }

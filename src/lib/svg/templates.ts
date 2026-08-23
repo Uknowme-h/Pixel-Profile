@@ -1,4 +1,4 @@
-import type { RenderInput, TemplateId, ThemeColors, DefaultMascotId } from "@/types";
+import type { RenderInput, ClassicTemplateId, ThemeColors, DefaultMascotId } from "@/types";
 import { renderPixelText } from "@/lib/svg/pixel-font";
 import { normalizeMascot, type MascotSlot } from "@/lib/svg/normalize";
 import { SPIDEY_HREF } from "@/lib/svg/spiderman-sprite-b64";
@@ -123,7 +123,7 @@ function renderMascot(
  */
 
 export interface TemplateDef {
-  id: TemplateId;
+  id: ClassicTemplateId;
   label: string;
   description: string;
   viewBox: string;
@@ -873,7 +873,7 @@ function adjustBrightness(hex: string, delta: number): string {
 }
 
 // ─── Registry ─────────────────────────────────────────────────────────────────
-export const TEMPLATES: Record<TemplateId, TemplateDef> = {
+export const TEMPLATES: Record<ClassicTemplateId, TemplateDef> = {
   pixel: {
     id: "pixel",
     label: "Pixel",
@@ -906,7 +906,7 @@ export const TEMPLATES: Record<TemplateId, TemplateDef> = {
   },
 };
 
-export function renderTemplate(id: TemplateId, input: RenderInput): string {
+export function renderTemplate(id: ClassicTemplateId, input: RenderInput): string {
   const tpl = TEMPLATES[id];
   if (!tpl) throw new Error(`unknown template: ${id}`);
   return tpl.render(input);

@@ -5,7 +5,7 @@ create table if not exists public.profile_configs (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   username text not null,
-  template_id text not null check (template_id in ('pixel', 'arcade', 'fastfetch')),
+  template_id text not null check (template_id in ('pixel', 'arcade', 'fastfetch', 'canvas')),
   theme jsonb not null default '{"bg":"#1a1b26","fg":"#c0caf5","accent":"#7aa2f7","muted":"#565f89"}',
   fields jsonb not null default '{}',
   mascot_svg_url text,
@@ -80,3 +80,10 @@ alter table public.github_data_cache
   add column if not exists pull_requests    integer not null default 0,
   add column if not exists issues           integer not null default 0,
   add column if not exists repos_contributed integer not null default 0;
+
+-- ── Migration: allow canvas editor template ──────────────────────────────────
+alter table public.profile_configs drop constraint if exists profile_configs_template_id_check;
+alter table public.profile_configs
+  add constraint profile_configs_template_id_check
+  check (template_id in ('pixel', 'arcade', 'fastfetch', 'canvas'));
+

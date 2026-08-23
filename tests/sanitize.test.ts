@@ -76,6 +76,12 @@ describe("sanitizeSvg", () => {
     const out = sanitizeSvg(GOOD);
     expect(out).toContain("fill=\"#ff0000\"");
   });
+
+  it("keeps text content inside <text>", () => {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg"><text x="0" y="12" fill="#111111">hello</text></svg>`;
+    const out = sanitizeSvg(svg);
+    expect(out).toContain("hello");
+  });
 });
 
 describe("namespaceDefs", () => {
