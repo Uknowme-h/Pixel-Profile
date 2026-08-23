@@ -14,6 +14,22 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const STORAGE_KEY = "pixel-profile-editor-scene";
 
+function gifHint(
+  data: { frames?: number; sourceFrames?: number; sourceWidth?: number; sourceHeight?: number; width?: number; height?: number },
+  extra?: string,
+): string {
+  const src = Number(data.sourceFrames) || 0;
+  const kept = Number(data.frames) || 0;
+  const frames = src > kept ? `${src}→${kept} frames` : `${kept} frames`;
+  const bits = [frames];
+  if (data.sourceWidth && data.width && (data.sourceWidth !== data.width || data.sourceHeight !== data.height)) {
+    bits.push(`${data.sourceWidth}×${data.sourceHeight} → ${data.width}×${data.height} SMIL`);
+  }
+  if (extra) bits.push(extra);
+  else if (bits.length === 1) bits.push("compiled to SMIL");
+  return bits.join(" · ");
+}
+
 export default function EditorShell() {
   const supabase = useMemo(() => getBrowserClient(), []);
   const [session, setSession] = useState<Session | null>(null);
@@ -121,7 +137,12 @@ export default function EditorShell() {
 
   const addGif = useCallback(
     async (file: File, place: GifPlace = "stamp", x?: number, y?: number) => {
-      if (scene.nodes.length >= MAX_NODES) return;
+      const isSheetNode = (n: SceneNode) =>
+        n.type === "sprite" &&
+        (n.props.role === "sheet" ||
+          (n.x <= 0 && n.y <= 0 && n.w >= scene.width && n.h >= scene.height));
+      const replacing = place === "frame" && scene.nodes.some(isSheetNode);
+      if (!replacing && scene.nodes.length >= MAX_NODES) return;
       setSaveHint("Converting GIF…");
       try {
         const qs = place === "frame" ? `?w=${scene.width}&h=${scene.height}` : "";
@@ -152,14 +173,14 @@ export default function EditorShell() {
             z: 0,
             locked: true,
             animation: "none",
-            props,
+            props: { ...props, role: "sheet" },
           };
-          const rest = scene.nodes.map((n) => ({ ...n, z: n.z + 1 }));
+          const rest = scene.nodes
+            .filter((n) => !isSheetNode(n))
+            .map((n) => (replacing ? n : { ...n, z: n.z + 1 }));
           pushHistory({ ...scene, nodes: [frame, ...rest] });
           setSelectedId(frame.id);
-          setSaveHint(
-            `${data.frames} frames · GIF is the sheet (${data.width}×${data.height} SMIL). Unlock to move.`,
-          );
+          setSaveHint(gifHint(data, `GIF is the sheet (${data.width}×${data.height} SMIL). Unlock to move.`));
           return;
         }
         const node: SceneNode = {
@@ -175,11 +196,7 @@ export default function EditorShell() {
         };
         pushHistory({ ...scene, nodes: [...scene.nodes, node] });
         setSelectedId(node.id);
-        setSaveHint(
-          data.sourceWidth && (data.sourceWidth !== data.width || data.sourceHeight !== data.height)
-            ? `${data.frames} frames · ${data.sourceWidth}×${data.sourceHeight} → ${data.width}×${data.height} SMIL`
-            : `${data.frames} frames compiled to SMIL`,
-        );
+        setSaveHint(gifHint(data));
       } catch (err) {
         setSaveHint(err instanceof Error ? err.message : "gif failed");
       }

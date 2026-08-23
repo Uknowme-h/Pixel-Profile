@@ -1,9 +1,9 @@
 "use client";
 
 import { BLOCK_MIME } from "@/components/editor/palette";
-import { SNAP } from "@/lib/editor/types";
-import type { BuiltInBlockType, EditorScene, SceneNode } from "@/lib/editor/types";
-import { useCallback, useRef, useState } from "react";
+import { canvasMotionStyle } from "@/lib/editor/animations";
+import { SNAP, type BuiltInBlockType, type EditorScene, type SceneNode } from "@/lib/editor/types";
+import { useCallback, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 function snap(n: number): number {
   return Math.round(n / SNAP) * SNAP;
@@ -33,6 +33,7 @@ export function EditorCanvas({
   const boardRef = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const clearBoard = scene.background.fill === "none" || scene.background.fill === "transparent";
 
   const clientToBoard = useCallback((clientX: number, clientY: number) => {
     const el = boardRef.current;
@@ -64,14 +65,15 @@ export function EditorCanvas({
       <div className="flex min-h-full items-center justify-center p-8">
         <div
           ref={boardRef}
-          className="relative shrink-0 shadow-[8px_8px_0_#111]"
+          className={`relative shrink-0 shadow-[8px_8px_0_#111] ${clearBoard ? "ed-swatch-clear" : ""}`}
           style={{
             width: scene.width,
             height: scene.height,
-            backgroundColor: scene.background.fill,
-            backgroundImage:
-              "linear-gradient(to right, rgb(255 255 255 / 0.06) 1px, transparent 1px), linear-gradient(to bottom, rgb(255 255 255 / 0.06) 1px, transparent 1px)",
-            backgroundSize: `${SNAP}px ${SNAP}px`,
+            backgroundColor: clearBoard ? undefined : scene.background.fill,
+            backgroundImage: clearBoard
+              ? undefined
+              : "linear-gradient(to right, rgb(255 255 255 / 0.06) 1px, transparent 1px), linear-gradient(to bottom, rgb(255 255 255 / 0.06) 1px, transparent 1px)",
+            backgroundSize: clearBoard ? undefined : `${SNAP}px ${SNAP}px`,
           }}
           onPointerMove={onPointerMove}
           onPointerUp={() => setDrag(null)}
@@ -199,7 +201,9 @@ function NodeView({
           }}
         />
       ) : (
-        <NodeFace node={node} />
+        <MotionShell node={node}>
+          <NodeFace node={node} />
+        </MotionShell>
       )}
       {selected && !editing && (
         <button
@@ -213,10 +217,22 @@ function NodeView({
   );
 }
 
+function MotionShell({ node, children }: { node: SceneNode; children: ReactNode }) {
+  const motion = canvasMotionStyle(node);
+  if (!motion) return children;
+  return (
+    <div className={`h-full w-full ${motion.className}`} style={motion.style as CSSProperties}>
+      {children}
+    </div>
+  );
+}
+
 function NodeFace({ node }: { node: SceneNode }) {
   const fill = String(node.props.fill ?? "#c8f54a");
+  const clearFill = fill === "none" || fill === "transparent";
   const text = String(node.props.text ?? "#f5f5f0");
   const accent = String(node.props.accent ?? "#c8f54a");
+  const opacity = Number(node.props.opacity ?? 1);
   if (node.type === "text") {
     return (
       <div
@@ -228,10 +244,28 @@ function NodeFace({ node }: { node: SceneNode }) {
     );
   }
   if (node.type === "shape.rect") {
-    return <div className="h-full w-full" style={{ background: fill, borderRadius: Number(node.props.radius ?? 0) }} />;
+    return (
+      <div
+        className={`h-full w-full ${clearFill ? "ed-swatch-clear" : ""}`}
+        style={{
+          background: clearFill ? undefined : fill,
+          borderRadius: Number(node.props.radius ?? 0),
+          opacity,
+        }}
+      />
+    );
   }
   if (node.type === "shape.ellipse") {
-    return <div className="h-full w-full" style={{ background: fill, borderRadius: "50%" }} />;
+    return (
+      <div
+        className={`h-full w-full ${clearFill ? "ed-swatch-clear" : ""}`}
+        style={{
+          background: clearFill ? undefined : fill,
+          borderRadius: "50%",
+          opacity,
+        }}
+      />
+    );
   }
   if (node.type === "shape.line") {
     return (
@@ -282,6 +316,26 @@ function NodeFace({ node }: { node: SceneNode }) {
           imageRendering: "pixelated",
         }}
       />
+    );
+  }
+  if (node.type === "languageBar") {
+    const textColor = String(node.props.text ?? node.props.muted ?? "#9a9a90");
+    const rows = [
+      ["TypeScript", "75%"],
+      ["Jupyter Notebook", "50%"],
+      ["Rust", "35%"],
+    ];
+    return (
+      <div className="flex h-full min-w-0 flex-col justify-center gap-1 overflow-hidden font-mono text-[10px]">
+        {rows.map(([l, w]) => (
+          <div key={l} className="flex min-w-0 items-center gap-2">
+            <span className="w-[38%] shrink-0 truncate" style={{ color: textColor }} title={l}>
+              {l}
+            </span>
+            <span className="h-1.5 min-w-0 rounded-sm" style={{ width: w, background: String(node.props.bar ?? "#c8f54a") }} />
+          </div>
+        ))}
+      </div>
     );
   }
   return (

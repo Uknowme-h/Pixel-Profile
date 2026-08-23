@@ -43,6 +43,16 @@ describe("editor schema", () => {
     }));
     expect(() => parseScene({ width: 800, height: 400, nodes })).toThrow(SceneError);
   });
+
+  it("keeps a transparent sheet fill", () => {
+    const scene = parseScene({
+      width: 800,
+      height: 400,
+      background: { fill: "none" },
+      nodes: [],
+    });
+    expect(scene.background.fill).toBe("none");
+  });
 });
 
 describe("editor compile", () => {
@@ -66,5 +76,100 @@ describe("editor compile", () => {
     });
     expect(svg).not.toContain("<script>");
     expect(svg).toContain("&lt;script&gt;");
+  });
+
+  it("emits tunable SMIL for drift, glow, delay, and amount", () => {
+    const svg = compileScene({
+      width: 400,
+      height: 200,
+      background: { fill: "#111111" },
+      nodes: [
+        {
+          id: "nDrift",
+          type: "shape.ellipse",
+          x: 0,
+          y: 0,
+          w: 80,
+          h: 80,
+          z: 0,
+          animation: "drift",
+          animDur: 4.5,
+          animDelay: 0.8,
+          animAmount: 100,
+          props: { fill: "#c8f54a", opacity: 0.3 },
+        },
+        {
+          id: "nGlow",
+          type: "shape.ellipse",
+          x: 100,
+          y: 0,
+          w: 80,
+          h: 80,
+          z: 1,
+          animation: "glow",
+          animDur: 3,
+          props: { fill: "#c8f54a", opacity: 0.4 },
+        },
+      ],
+    });
+    expect(svg).toContain('type="translate"');
+    expect(svg).toContain('dur="4.50s"');
+    expect(svg).toContain('begin="0.80s"');
+    expect(svg).toContain("keySplines=");
+    expect(svg).toContain('type="scale"');
+    expect(svg).toContain('dur="3.00s"');
+    expect(svg).toContain('opacity="0.30"');
+    expect(svg).not.toContain("<script");
+  });
+
+  it("lets language names pick a color and truncates long labels", () => {
+    const svg = compileScene(
+      {
+        width: 400,
+        height: 200,
+        background: { fill: "#111111" },
+        nodes: [
+          {
+            id: "nLang",
+            type: "languageBar",
+            x: 0,
+            y: 0,
+            w: 160,
+            h: 80,
+            z: 0,
+            animation: "none",
+            props: { fill: "#1c1c1a", bar: "#c8f54a", text: "#ff00aa" },
+          },
+        ],
+      },
+      { ...DEMO_COMPILE_DATA, languages: { "Jupyter Notebook": 900, Rust: 100 } },
+    );
+    expect(svg).toContain('fill="#ff00aa"');
+    expect(svg).toContain("…");
+    expect(svg).not.toContain(">Jupyter Notebook<");
+    expect(svg).toContain("Rust");
+  });
+
+  it("omits the sheet rect when fill is none and paints shape fill=none", () => {
+    const svg = compileScene({
+      width: 400,
+      height: 200,
+      background: { fill: "none" },
+      nodes: [
+        {
+          id: "nRect",
+          type: "shape.rect",
+          x: 8,
+          y: 8,
+          w: 40,
+          h: 40,
+          z: 0,
+          animation: "none",
+          props: { fill: "none" },
+        },
+      ],
+    });
+    expect(svg).not.toMatch(/<rect x="0" y="0" width="400"/);
+    expect(svg).toContain('fill="none"');
   });
 });

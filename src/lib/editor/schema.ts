@@ -24,7 +24,7 @@ const BLOCK_TYPES = new Set<BlockType>([
   "sprite",
 ]);
 
-const ANIMATIONS = new Set<AnimationPresetId>(["none", "fade", "pulse", "float", "spin", "wiggle"]);
+const ANIMATIONS = new Set<AnimationPresetId>(["none", "fade", "pulse", "float", "spin", "wiggle", "drift", "glow"]);
 
 const HEX = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 const ID = /^[a-zA-Z][a-zA-Z0-9_-]{0,63}$/;
@@ -41,6 +41,11 @@ function str(v: unknown, fallback = ""): string {
 
 function hex(v: unknown, fallback: string): string {
   return typeof v === "string" && HEX.test(v) ? v : fallback;
+}
+
+function paint(v: unknown, fallback: string): string {
+  if (typeof v === "string" && (v === "none" || v === "transparent")) return "none";
+  return hex(v, fallback);
 }
 
 function parseProps(raw: unknown): Record<string, string | number | boolean> {
@@ -87,6 +92,9 @@ function parseNode(raw: unknown, index: number): SceneNode | null {
     locked: o.locked === true,
     visible: o.visible !== false,
     animation,
+    animDur: o.animDur === undefined ? undefined : num(o.animDur, 2, 0.2, 20),
+    animDelay: o.animDelay === undefined ? undefined : num(o.animDelay, 0, 0, 12),
+    animAmount: o.animAmount === undefined ? undefined : num(o.animAmount, 50, 1, 100),
     props: parseProps(o.props),
   };
 }
@@ -117,7 +125,7 @@ export function parseScene(raw: unknown): EditorScene {
     width,
     height,
     background: {
-      fill: hex(bgRaw.fill, "#111111"),
+      fill: paint(bgRaw.fill, "#111111"),
       radius: num(bgRaw.radius, 0, 0, 48),
     },
     nodes,
@@ -126,4 +134,8 @@ export function parseScene(raw: unknown): EditorScene {
 
 export function isHexColor(v: string): boolean {
   return HEX.test(v);
+}
+
+export function isNoneFill(v: unknown): boolean {
+  return v === "none" || v === "transparent";
 }

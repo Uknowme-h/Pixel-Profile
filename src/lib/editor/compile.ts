@@ -1,4 +1,4 @@
-import { animationMarkup } from "@/lib/editor/animations";
+import { animatedInner } from "@/lib/editor/animations";
 import { DEMO_COMPILE_DATA } from "@/lib/editor/demo";
 import { parseScene } from "@/lib/editor/schema";
 import { resolveNodeProps } from "@/lib/editor/tokens";
@@ -19,6 +19,11 @@ function hex(v: unknown, fallback: string): string {
   return typeof v === "string" && /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v) ? v : fallback;
 }
 
+function paint(v: unknown, fallback: string): string {
+  if (v === "none" || v === "transparent") return "none";
+  return hex(v, fallback);
+}
+
 function num(v: unknown, fallback: number): number {
   const n = typeof v === "number" ? v : Number(v);
   return Number.isFinite(n) ? n : fallback;
@@ -30,10 +35,9 @@ function str(v: unknown, fallback: string): string {
 
 function wrapNode(node: SceneNode, inner: string): string {
   const rot = node.rotation ? ` rotate(${node.rotation} ${node.w / 2} ${node.h / 2})` : "";
-  const anim = animationMarkup(node.animation, node.w, node.h);
   return (
     `<g transform="translate(${node.x}, ${node.y})${rot}">` +
-    `<g id="${xml(node.id)}">${anim}${inner}</g>` +
+    `<g id="${xml(node.id)}">${animatedInner(node, inner)}</g>` +
     `</g>`
   );
 }
@@ -53,7 +57,7 @@ function renderText(node: SceneNode): string {
 }
 
 function renderStatPill(node: SceneNode): string {
-  const fill = hex(node.props.fill, "#1c1c1a");
+  const fill = paint(node.props.fill, "#1c1c1a");
   const accent = hex(node.props.accent, "#c8f54a");
   const text = hex(node.props.text, "#f5f5f0");
   const label = xml(str(node.props.label, "stat"));
@@ -67,7 +71,7 @@ function renderStatPill(node: SceneNode): string {
 }
 
 function renderStatRow(node: SceneNode, data: CompileData): string {
-  const fill = hex(node.props.fill, "#1c1c1a");
+  const fill = paint(node.props.fill, "#1c1c1a");
   const accent = hex(node.props.accent, "#c8f54a");
   const text = hex(node.props.text, "#f5f5f0");
   const items = [
@@ -90,31 +94,51 @@ function renderStatRow(node: SceneNode, data: CompileData): string {
     .join("");
 }
 
+function fitMonoLabel(name: string, maxPx: number, fontSize: number): string {
+  const cw = Math.max(4, fontSize * 0.62);
+  const maxChars = Math.max(1, Math.floor(maxPx / cw));
+  if (name.length <= maxChars) return name;
+  if (maxChars <= 1) return "…";
+  return `${name.slice(0, maxChars - 1)}…`;
+}
+
 function renderLanguageBar(node: SceneNode, data: CompileData): string {
-  const fill = hex(node.props.fill, "#f5f5f0");
+  const fill = paint(node.props.fill, "#f5f5f0");
   const bar = hex(node.props.bar, "#c8f54a");
-  const muted = hex(node.props.muted, "#9a9a90");
+  const text = hex(node.props.text, hex(node.props.muted, "#9a9a90"));
   const langs = Object.entries(data.languages)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 4);
   const total = langs.reduce((s, [, n]) => s + n, 0) || 1;
   const rowH = langs.length ? node.h / langs.length : node.h;
+  const fontSize = 10;
+  const gutter = 8;
+  const minBar = 64;
+  const maxLabel = Math.max(40, node.w - minBar - gutter);
+  const longest = langs.reduce((m, [n]) => Math.max(m, n.length), 0);
+  const labelW = Math.min(maxLabel, Math.max(48, longest * fontSize * 0.62));
+  const barX = labelW + gutter;
+  const trackW = Math.max(4, node.w - barX);
   return langs
     .map(([name, bytes], i) => {
       const y = i * rowH;
       const pct = bytes / total;
-      const barW = Math.max(4, (node.w - 88) * pct);
+      const barW = Math.max(4, trackW * pct);
+      const clip = `${xml(node.id)}-lbl${i}`;
+      const label = xml(fitMonoLabel(name, labelW, fontSize));
+      const baseline = y + Math.min(rowH - 2, Math.max(10, rowH * 0.55));
       return [
-        `<text x="0" y="${y + 12}" fill="${muted}" font-size="10" font-family="${FONT}">${xml(name)}</text>`,
-        `<rect x="88" y="${y + 4}" width="${node.w - 88}" height="8" fill="${fill}" opacity="0.15"/>`,
-        `<rect x="88" y="${y + 4}" width="${barW.toFixed(1)}" height="8" fill="${bar}"/>`,
+        `<defs><clipPath id="${clip}"><rect x="0" y="${y.toFixed(1)}" width="${labelW.toFixed(1)}" height="${rowH.toFixed(1)}"/></clipPath></defs>`,
+        `<text x="0" y="${baseline.toFixed(1)}" fill="${text}" font-size="${fontSize}" font-family="${FONT}" clip-path="url(#${clip})">${label}</text>`,
+        `<rect x="${barX.toFixed(1)}" y="${y + Math.max(2, (rowH - 8) / 2)}" width="${trackW.toFixed(1)}" height="8" fill="${fill}" opacity="0.15"/>`,
+        `<rect x="${barX.toFixed(1)}" y="${y + Math.max(2, (rowH - 8) / 2)}" width="${barW.toFixed(1)}" height="8" fill="${bar}"/>`,
       ].join("");
     })
     .join("");
 }
 
 function renderSocial(node: SceneNode): string {
-  const fill = hex(node.props.fill, "#c8f54a");
+  const fill = paint(node.props.fill, "#c8f54a");
   const text = hex(node.props.text, "#111111");
   const label = xml(str(node.props.label, "GitHub"));
   const rx = Math.min(8, node.h / 2);
@@ -124,15 +148,21 @@ function renderSocial(node: SceneNode): string {
   ].join("");
 }
 
+function paintOpacity(node: SceneNode): string {
+  const o = num(node.props.opacity, 1);
+  if (o >= 0.999) return "";
+  return ` opacity="${Math.min(1, Math.max(0, o)).toFixed(2)}"`;
+}
+
 function renderRect(node: SceneNode): string {
-  const fill = hex(node.props.fill, "#c8f54a");
+  const fill = paint(node.props.fill, "#c8f54a");
   const rx = num(node.props.radius, 0);
-  return `<rect x="0" y="0" width="${node.w}" height="${node.h}" rx="${rx}" fill="${fill}"/>`;
+  return `<rect x="0" y="0" width="${node.w}" height="${node.h}" rx="${rx}" fill="${fill}"${paintOpacity(node)}/>`;
 }
 
 function renderEllipse(node: SceneNode): string {
-  const fill = hex(node.props.fill, "#f5f5f0");
-  return `<ellipse cx="${node.w / 2}" cy="${node.h / 2}" rx="${node.w / 2}" ry="${node.h / 2}" fill="${fill}"/>`;
+  const fill = paint(node.props.fill, "#f5f5f0");
+  return `<ellipse cx="${node.w / 2}" cy="${node.h / 2}" rx="${node.w / 2}" ry="${node.h / 2}" fill="${fill}"${paintOpacity(node)}/>`;
 }
 
 function renderLine(node: SceneNode): string {
@@ -194,10 +224,13 @@ export function compileScene(raw: unknown, data: CompileData = DEMO_COMPILE_DATA
   const scene: EditorScene = parseScene(raw);
   const r = scene.background.radius ?? 0;
   const nodes = [...scene.nodes].filter((n) => n.visible !== false).sort((a, b) => a.z - b.z);
+  const bg = paint(scene.background.fill, "#111111");
   const parts: string[] = [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${scene.width}" height="${scene.height}" viewBox="0 0 ${scene.width} ${scene.height}" role="img">`,
-    `<rect x="0" y="0" width="${scene.width}" height="${scene.height}" rx="${r}" fill="${scene.background.fill}"/>`,
   ];
+  if (bg !== "none") {
+    parts.push(`<rect x="0" y="0" width="${scene.width}" height="${scene.height}" rx="${r}" fill="${bg}"/>`);
+  }
   for (const node of nodes) {
     const resolved = { ...node, props: resolveNodeProps(node.props, data) };
     const inner = renderInner(resolved, data);

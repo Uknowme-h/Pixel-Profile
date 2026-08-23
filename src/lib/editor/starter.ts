@@ -15,6 +15,26 @@ export function starterScene(): EditorScene {
     height: 400,
     background: { fill: "#111111", radius: 0 },
     nodes: [
+      node("shape.ellipse", {
+        x: 560,
+        y: 16,
+        w: 200,
+        h: 200,
+        animation: "drift",
+        animDur: 8,
+        animAmount: 70,
+        props: { fill: "#c8f54a", opacity: 0.2 },
+      }),
+      node("shape.ellipse", {
+        x: -24,
+        y: 250,
+        w: 160,
+        h: 120,
+        animation: "glow",
+        animDur: 5.4,
+        animDelay: 0.5,
+        props: { fill: "#c8f54a", opacity: 0.16 },
+      }),
       node("text", {
         props: { content: "Your text", fill: "#f5f5f0", fontSize: 32, weight: "bold" },
       }),
