@@ -70,7 +70,7 @@ export const BLOCK_REGISTRY: BlockDef[] = [
       h: 96,
       animation: "none",
       visible: true,
-      props: { fill: "#f5f5f0", bar: "#c8f54a", muted: "#9a9a90" },
+      props: { fill: "#f5f5f0", bar: "#c8f54a", text: "#f5f5f0" },
     },
   },
   {
@@ -107,18 +107,18 @@ export const BLOCK_REGISTRY: BlockDef[] = [
   },
   {
     type: "shape.ellipse",
-    label: "Ellipse",
+    label: "Orb",
     category: "shape",
-    hint: "Orb or avatar stand-in.",
+    hint: "Atmosphere orb. Drift or Glow.",
     defaults: {
       type: "shape.ellipse",
       x: 600,
       y: 240,
-      w: 80,
-      h: 80,
-      animation: "float",
+      w: 120,
+      h: 120,
+      animation: "drift",
       visible: true,
-      props: { fill: "#f5f5f0" },
+      props: { fill: "#c8f54a", opacity: 0.28 },
     },
   },
   {

@@ -21,7 +21,7 @@ export type BuiltInBlockType =
 
 export type BlockType = BuiltInBlockType;
 
-export type AnimationPresetId = "none" | "fade" | "pulse" | "float" | "spin" | "wiggle";
+export type AnimationPresetId = "none" | "fade" | "pulse" | "float" | "spin" | "wiggle" | "drift" | "glow";
 
 export interface SceneNode {
   id: string;
@@ -35,6 +35,11 @@ export interface SceneNode {
   locked?: boolean;
   visible?: boolean;
   animation?: AnimationPresetId;
+  /** Seconds. Omit to use the preset default. */
+  animDur?: number;
+  animDelay?: number;
+  /** 1–100. 50 is the preset's native travel. */
+  animAmount?: number;
   props: Record<string, string | number | boolean>;
 }
 

@@ -74,7 +74,7 @@ export function Palette({
           className="w-full border border-[#111] bg-white px-2 py-2 text-left hover:bg-[#111] hover:text-white"
         >
           <span className="block text-xs">Stamp GIF</span>
-          <span className="block text-[10px] opacity-70">Fits to 128×128. Drop on the sheet too.</span>
+          <span className="block text-[10px] opacity-70">Fits to 128×128. Long GIFs are sampled to 48 frames.</span>
         </button>
         <button
           type="button"
@@ -82,7 +82,7 @@ export function Palette({
           className="mt-1 w-full border border-transparent px-2 py-2 text-left hover:border-[#111] hover:bg-white"
         >
           <span className="block text-xs">Use as sheet</span>
-          <span className="block text-[10px] text-[#999]">GIF becomes the whole artboard, behind other blocks.</span>
+          <span className="block text-[10px] text-[#999]">Fills the artboard (cover-crop). Replaces the current sheet GIF.</span>
         </button>
       </div>
     </aside>

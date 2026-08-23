@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { GifWriter } from "omggif";
-import { gifToSprite, GifError, fitRgba } from "@/lib/svg/gif";
+import { gifToSprite, GifError, fitRgba, pickKeepIndices } from "@/lib/svg/gif";
 import { compileScene } from "@/lib/editor/compile";
 
 function twoFrameGif(): Buffer {
@@ -50,6 +50,38 @@ describe("gifToSprite", () => {
     const mid = ((3 * 8) + 4) * 4;
     expect(out[mid]).toBe(255);
     expect(out[mid + 3]).toBe(255);
+  });
+
+  it("cover-fills a cell with no transparent pad", () => {
+    const src = new Uint8Array(4 * 2 * 4);
+    for (let i = 0; i < src.length; i += 4) {
+      src[i] = 255;
+      src[i + 3] = 255;
+    }
+    const out = fitRgba(src, 4, 2, 8, 8, "cover");
+    expect(out.length).toBe(8 * 8 * 4);
+    expect(out[3]).toBe(255);
+    const last = (8 * 8 - 1) * 4;
+    expect(out[last + 3]).toBe(255);
+    expect(out[last]).toBe(255);
+  });
+
+  it("samples a long GIF down to 48 frames instead of rejecting it", () => {
+    const keep = pickKeepIndices(84, 48);
+    expect(keep[0]).toBe(0);
+    expect(keep[keep.length - 1]).toBe(83);
+    expect(keep.length).toBe(48);
+
+    const buf = Buffer.alloc(80_000);
+    const w = new GifWriter(buf, 2, 2, { loop: 0, palette: [0xff0000, 0x00ff00] });
+    for (let i = 0; i < 60; i++) {
+      w.addFrame(0, 0, 2, 2, new Array(4).fill(i % 2), { delay: 10, palette: [0xff0000, 0x00ff00] });
+    }
+    const gif = buf.subarray(0, w.end());
+    const sprite = gifToSprite(gif);
+    expect(sprite.sourceFrames).toBe(60);
+    expect(sprite.frames).toBe(48);
+    expect(sprite.dur).toMatch(/^\d+(\.\d+)?s$/);
   });
 });
 
