@@ -1,6 +1,7 @@
 import { renderProfile } from "@/lib/render/service";
 import { renderPreview } from "@/lib/render/preview";
 import { createHash } from "node:crypto";
+import type { ClassicTemplateId } from "@/types";
 
 /**
  * Phase 5 — on-demand render endpoint.
@@ -16,6 +17,9 @@ import { createHash } from "node:crypto";
 
 export const dynamic = "force-dynamic";
 
+const CLASSIC = new Set<string>(["pixel", "arcade", "fastfetch"]);
+const TEMPLATES = new Set<string>(["pixel", "arcade", "fastfetch", "canvas"]);
+
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ username: string; templateId: string }> }
@@ -27,15 +31,15 @@ export async function GET(
 
   // Validate template early (cheap, avoids a DB hit for garbage routes). The
   // :templateId segment may arrive with a trailing ".svg" extension.
-  if (!/^[a-zA-Z0-9-]+$/.test(username) || !["pixel", "arcade", "fastfetch"].includes(templateId)) {
+  if (!/^[a-zA-Z0-9-]+$/.test(username) || !TEMPLATES.has(templateId)) {
     return new Response("not found", { status: 404 });
   }
 
   let svg: string | undefined;
   let error: string | undefined;
 
-  if (isPreview) {
-    svg = await renderPreview(req, templateId as "pixel" | "arcade" | "fastfetch");
+  if (isPreview && CLASSIC.has(templateId)) {
+    svg = await renderPreview(req, templateId as ClassicTemplateId);
   } else {
     const result = await renderProfile(username);
     svg = result.svg;

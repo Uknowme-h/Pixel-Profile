@@ -161,11 +161,12 @@ function sanitizeCss(css: string): string {
 
 /** Recursively prune a parsed SVG tree down to the allowlist. */
 function prune(node: Element): void {
+  const TEXT_HOSTS = new Set(["style", "text", "tspan", "title", "desc"]);
   for (const child of Array.from(node.childNodes ?? [])) {
     if (child.nodeType !== 1) {
-      // Preserve text nodes only inside <style> — everything else (comments,
-      // CDATA outside style, etc.) is dropped.
-      if (node.localName !== "style") node.removeChild(child);
+      // Keep character data only where SVG actually uses it. Everything else
+      // (comments, stray text in <g>/<svg>) is dropped.
+      if (!TEXT_HOSTS.has(node.localName)) node.removeChild(child);
       continue;
     }
     const el = child as Element;

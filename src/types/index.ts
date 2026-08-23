@@ -1,4 +1,5 @@
-export type TemplateId = "pixel" | "arcade" | "fastfetch";
+export type ClassicTemplateId = "pixel" | "arcade" | "fastfetch";
+export type TemplateId = ClassicTemplateId | "canvas";
 export type DefaultMascotId = "webswing" | "headturn" | "github" | "copilot" | "octopuss" | "none";
 export type BarStyle = "ease-out" | "bounce" | "linear" | "step";
 
@@ -21,6 +22,8 @@ export interface ProfileFields {
   barColors?: string[] | null;
   /** Fill-in animation style applied to all bars. */
   barAnimation?: BarStyle | null;
+  /** Canvas editor scene graph when templateId is `canvas`. */
+  scene?: unknown;
 }
 
 /** The persisted user profile configuration row. */

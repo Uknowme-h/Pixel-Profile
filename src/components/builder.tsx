@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getBrowserClient } from "@/lib/supabase/browser";
 import { TEMPLATES } from "@/lib/svg/templates";
+import { AppNav } from "@/components/app-nav";
 import type { Session } from "@supabase/supabase-js";
 import type { ThemeColors, TemplateId, DefaultMascotId, BarStyle } from "@/types";
 
@@ -253,7 +254,10 @@ export default function Builder() {
       )}
 
       <header className="flex items-center justify-between border-b border-[#DCDCDC] px-8 py-4">
-        <span className="font-mono text-sm font-medium tracking-tight">pixel profile</span>
+        <div className="flex items-center gap-8">
+          <span className="font-mono text-sm font-medium tracking-tight">pixel profile</span>
+          <AppNav />
+        </div>
         <div className="flex items-center gap-5">
           {stars !== null && (
             <a
@@ -322,7 +326,10 @@ export default function Builder() {
   return (
     <div className="flex h-full flex-col overflow-hidden bg-[#F8F8F8] text-[#111]">
     <header className="flex shrink-0 items-center justify-between border-b border-[#DCDCDC] px-8 py-4">
-      <span className="font-mono text-sm font-medium tracking-tight">pixel profile</span>
+      <div className="flex items-center gap-8">
+        <span className="font-mono text-sm font-medium tracking-tight">pixel profile</span>
+        <AppNav />
+      </div>
       <div className="flex items-center gap-5">
         {stars !== null && (
           <a

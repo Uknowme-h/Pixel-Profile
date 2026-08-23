@@ -54,7 +54,7 @@ export async function POST(request: Request) {
   if (!body.username || !/^[a-zA-Z0-9-]+$/.test(body.username)) {
     return json({ error: "invalid username" }, 400);
   }
-  if (!body.templateId || !["pixel", "arcade", "fastfetch"].includes(body.templateId)) {
+  if (!body.templateId || !["pixel", "arcade", "fastfetch", "canvas"].includes(body.templateId)) {
     return json({ error: "invalid templateId" }, 400);
   }
 
